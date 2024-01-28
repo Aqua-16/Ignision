@@ -65,7 +65,7 @@ def generate_rpn_map(anchor_map, gt_boxes, object_threshold = 0.7, background_th
     object_score = np.full(n,-1)
     gt_box_assignment = np.full(n,-1)
 
-    ious = utils.iou(anchors,gt_box_corners)
+    ious = utils.iou(anchors,gt_box_corners).numpy()
 
     max_iou_anchor = np.max(ious,axis = 1) # Best iou for each anchor
     highest_gt_box_idx = np.argmax(ious,axis = 1) # Best ground truth box for each anchor
