@@ -27,6 +27,18 @@ def iou(bbox1,bbox2):
 
     return iou
 
+def deltas_to_bboxes(deltas,means,stds,anchors):
+
+    deltas = deltas*stds + means
+    center = anchors[:,2:4] * deltas[:,0:2] + anchors[:,0:2]
+    sides = anchors[:,2:4] * tf.math.exp(deltas[:,2:4])
+
+    box_left_top = center - 0.5 * sides
+    box_right_bottom = box_left_top + sides
+
+    bboxes = tf.concat([box_left_top,box_right_bottom],axis = 1)
+    return bboxes
+
 
 '''------------------------------------------------------------------------------------------------------------------------------------------------------------
 
