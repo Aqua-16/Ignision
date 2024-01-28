@@ -1,4 +1,5 @@
 import numpy as np
+import utils
 
 def generate_anchor_map(image_shape,feature_scale):
     assert len(image_shape) == 3
@@ -44,3 +45,54 @@ def generate_anchor_map(image_shape,feature_scale):
     anchor_map = anchor_map.reshape((h*w*num,4))
     
     return anchor_map.astype("float32")
+
+def generate_rpn_map(anchor_map, gt_boxes, object_threshold = 0.7, background_threshold = 0.3):
+
+    h, w, num_anchors = anchor_map.shape
+    num_anchors = num_anchors//4
+
+    gt_box_corners = np.array([box.corners for box in gt_boxes])
+    num_gt_boxes = len(gt_box_corners)
+    gt_box_centers = 0.5*(gt_box_corners[:,0:2] + gt_box_corners[:,2:4])
+    gt_box_lengths = gt_box_corners[:,2:4] - gt_box_corners[:,0:2]
+
+    # Generating anchor corners
+    anchor_map = anchor_map.reshape((-1,4))
+    anchors = anchor_map[:,0:2] - 0.5*anchor_map[:,2:4]
+    anchors = anchors[:,0:2] + anchors[:,2:4]
+    n = anchors.shape[0]
+
+    object_score = np.full(n,-1)
+    gt_box_assignment = np.full(n,-1)
+
+    ious = utils.iou(anchors,gt_box_corners)
+
+    max_iou_anchor = np.max(ious,axis = 1) # Best iou for each anchor
+    highest_gt_box_idx = np.argmax(ious,axis = 1) # Best ground truth box for each anchor
+    max_iou_gt_box = np.max(ious,axis = 0) # Best iou for each ground truth box
+    highest_anchor_idx = np.where(max_iou_gt_box == ious)[0] # Best anchor for each ground truth box
+
+    object_score[max_iou_anchor < background_threshold] = 0
+    object_score[max_iou_anchor >= object_threshold] = 1
+    # Setting anchor boxes with highest ious as 1
+    object_score[highest_anchor_idx] = 1 
+    gt_box_assignment[:] = highest_gt_box_idx
+
+    mask = (object_score >= 0).astype("float32") # Creating mask for where objects are present
+    object_score[object_score<0] = 0
+
+    # Box deltas for regression of anchor boxes
+    box_deltas = np.empty((num_anchors,4))
+    box_deltas[:,0:2] = (gt_box_centers - anchor_map[:,0:2])/anchor_map[:,2:4]
+    box_deltas[:,2:4] = np.log(gt_box_lengths/anchor_map[:,2:4])
+
+    rpn_map = np.empty((h,w,num_anchors,6))
+    rpn_map[:,:,:,0] = mask.reshape((h,w,num_anchors))
+    rpn_map[:,:,:,1] = object_score.reshape((h,w,num_anchors))
+    rpn_map[:,:,:,2:6] = box_deltas.reshape((h,w,num_anchors,4))
+
+    rpn_map_coords = np.transpose( np.mgrid[0:h,0:w,0:num_anchors], (1,2,3,0)) # Every index will return its own coordinates. Useful to find indices
+    pos_anchor_coords = rpn_map_coords[np.where((rpn_map[:,:,:,1] > 0) & (rpn_map[:,:,:,0] > 0))] # Anchors with object
+    neg_anchor_coords = rpn_map_coords[np.where((rpn_map[:,:,:,1] == 0) & (rpn_map[:,:,:,0] > 0))] # Anchors without objects
+
+    return rpn_map.astype("float32"), pos_anchor_coords, neg_anchor_coords
