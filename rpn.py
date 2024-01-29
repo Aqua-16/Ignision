@@ -83,3 +83,36 @@ class RPN(tf.keras.Model):
 
         proposals = tf.gather(proposals, indices = indices)
         return [ scores, box_deltas, proposals ]
+
+    @staticmethod
+    def cls_loss(y_pred, gt_rpn_map):
+        y_true = tf.reshape(gt_rpn_map[:,:,:,1], shape = tf.shape(y_pred))
+        y_mask = tf.reshape(gt_rpn_map[:,:,:,0], shape = tf.shape(y_pred))
+
+        n_cls = tf.cast(tf.math.count_nonzero(y_mask), dtype = tf.float32) + tf.constant(1e-3)
+        loss_anchors = tf.keras.loss.binary_crossentropy(y_true, y_pred)
+
+        valid_loss = y_mask * loss_anchors
+        return tf.reduce_sum(valid_loss)/n_cls
+
+    @staticmethod
+    def reg_loss(y_pred, gt_rpn_map):
+
+        sigma = 9.0
+        y_true = tf.reshape(gt_rpn_map[:,:,:,2:6], shape = tf.shape(y_pred))
+
+        y_included = tf.reshape(gt_rpn_map[:,:,:,0], shape = tf.shape(gt_rpn_map)[0:4]) 
+        y_positive = tf.reshape(gt_rpn_map[:,:,:,1], shape = tf.shape(gt_rpn_map)[0:4])
+        y_mask = y_included * y_positive
+        y_mask = tf.repeat(y_mask, repeats = 4, axis = -1)
+
+        n_cls = tf.cast(tf.math.count_nonzero(y_included), dtype = tf.float32) + tf.constant(1e-3) # Using y_included to check for all anchors (This is similar to our class loss)
+
+        x = tf.math.abs(y_pred - y_true)
+        is_small = tf.stop_gradient(tf.cast(tf.less(x,1/sigma), dtype = tf.float32))
+        R_small_loss = 0.5/sigma * x * x
+        R_large_loss = x - 0.5/sigma
+        loss_anchors = is_small * R_small_loss + (1-is_small) * R_large_loss
+
+        valid_loss = y_mask * loss_anchors
+        return tf.reduce_sum(valid_loss)/n_cls
