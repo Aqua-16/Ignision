@@ -44,7 +44,7 @@ class roi_pooling(Layer):
     def _comp_pooled_rois(feature_map, rois, pool_size):
         return tf.map_fn(
         fn = lambda roi:
-        roi_pooling._compute_pooled_roi(feature_map = feature_map, roi = roi, pool_size = pool_size),
+        roi_pooling._comp_pooled_roi(feature_map = feature_map, roi = roi, pool_size = pool_size),
         elements = rois,
         fn_output_signature = tf.float32
     )
