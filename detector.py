@@ -6,7 +6,6 @@ from tensorflow.keras.layers import Dropout
 from tensorflow.keras.layers import Flatten
 from tensorflow.keras.layers import Lambda
 from tensorflow.keras.layers import TimeDistributed
-from tensorflow.keras import backend as K
 
 from .roi_pooling import roi_pooling
 
@@ -80,11 +79,11 @@ class DetectorNetwork(tf.keras.Model):
     @staticmethod
     def class_loss(y_pred, y_true, f_logits):
         scale_factor = 1.0
-        N = tf.cast(tf.shape(y_true)[1], dtype = tf.float32) + K.epsilon()  # number of proposals
+        N = tf.cast(tf.shape(y_true)[1], dtype = tf.float32) + tf.constant(1e-3)  # number of proposals
         if f_logits:
-            return scale_factor * K.sum(K.categorical_crossentropy(target = y_true, output = y_pred, from_logits = True)) / N
+            return scale_factor * tf.reduce_sum(tf.keras.loss.categorical_crossentropy(target = y_true, output = y_pred, from_logits = True)) / N
         else:
-            return scale_factor * K.sum(K.categorical_crossentropy(y_true, y_pred)) / N
+            return scale_factor * tf.reduce_sum(tf.keras.loss.categorical_crossentropy(y_true, y_pred)) / N
 
     @staticmethod
     def regression_loss(y_pred, y_true):
@@ -101,8 +100,8 @@ class DetectorNetwork(tf.keras.Model):
         R_positive_branch = x_abs - 0.5 / sigma_squared
         losses = is_negative_branch * R_negative_branch + (1.0 - is_negative_branch) * R_positive_branch
 
-        N = tf.cast(tf.shape(y_true)[1], dtype = tf.float32) + K.epsilon()
+        N = tf.cast(tf.shape(y_true)[1], dtype = tf.float32) +  tf.constant(1e-3)
         relevant_loss_terms = y_mask * losses
-        return scale_factor * K.sum(relevant_loss_terms) / N
+        return scale_factor * tf.reduce_sum(relevant_loss_terms) / N
 
 
