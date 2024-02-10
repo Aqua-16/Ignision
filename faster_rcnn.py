@@ -34,7 +34,7 @@ class FasterRCNN(tf.keras.Model):
         feature_map = self._level1_feature_extractor(input_image = input_image)
 
         # At second level, use region proposal network to find noteworthy regions
-        rpn_scores, rpn_box_deltas, rpn_scores = self._level2_rpn(
+        rpn_scores, rpn_box_deltas, rpn_proposals = self._level2_rpn(
             inputs = [
                 input_image,
                 feature_map,
