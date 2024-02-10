@@ -12,12 +12,12 @@ class BackBone(tf.keras.Model):
         regularizer = tf.keras.regularizers.l2(l2)
         input_shape = (None,None,3)
 
-        self.block1_conv1 = Conv2D(name="block1_conv1", kernel_size = (3,3), input_shape = input_shape, strides = 1, padding = "same", filters = 64, activation = "relu", kernel_initializer = initial_weights, trainable = false)
-        self.block1_conv2 = Conv2D(name = "block1_conv2", kernel_size = (3,3), strides = 1, padding = "same", filters = 64, activation = "relu", kernel_initializer = initial_weights, trainable = false)
+        self.block1_conv1 = Conv2D(name = "block1_conv1", kernel_size = (3,3), input_shape = input_shape, strides = 1, padding = "same", filters = 64, activation = "relu", kernel_initializer = initial_weights, trainable = False)
+        self.block1_conv2 = Conv2D(name = "block1_conv2", kernel_size = (3,3), strides = 1, padding = "same", filters = 64, activation = "relu", kernel_initializer = initial_weights, trainable = False)
         self.block1_maxpool = MaxPooling2D(name = "block1_pool", pool_size = 2, strides = 2)
 
-        self.block2_conv1 = Conv2D(name = "block2_conv1", kernel_size = (3,3), strides = 1, padding = "same", filters = 128, activation = "relu", kernel_initializer = initial_weights, trainable = false)
-        self.block2_conv2 = Conv2D(name = "block2_conv2", kernel_size = (3,3), strides = 1, padding = "same", filters = 128, activation = "relu", kernel_initializer = initial_weights, trainable = false)
+        self.block2_conv1 = Conv2D(name = "block2_conv1", kernel_size = (3,3), strides = 1, padding = "same", filters = 128, activation = "relu", kernel_initializer = initial_weights, trainable = False)
+        self.block2_conv2 = Conv2D(name = "block2_conv2", kernel_size = (3,3), strides = 1, padding = "same", filters = 128, activation = "relu", kernel_initializer = initial_weights, trainable = False)
         self.block2_maxpool = MaxPooling2D(name = "block2_pool", pool_size = 2, strides = 2)
 
         self.block3_conv1 = Conv2D(name = "block3_conv1", kernel_size = (3,3), strides = 1, padding = "same", filters = 256, activation = "relu", kernel_initializer = initial_weights, kernel_regularizer = regularizer)
