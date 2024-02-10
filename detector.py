@@ -7,7 +7,7 @@ from tensorflow.keras.layers import Flatten
 from tensorflow.keras.layers import Lambda
 from tensorflow.keras.layers import TimeDistributed
 
-from .roi_pooling import roi_pooling
+import roi_pooling
 
 class DetectorNetwork(tf.keras.Model):
     def __init__(self, n_of_classes, custom_roi_pool, actclassoutputs, l2, dropout_prob):
