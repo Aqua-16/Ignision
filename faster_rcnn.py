@@ -6,9 +6,10 @@ from tensorflow.keras import Model
 import vgg16
 import utils
 import rpn
+import detector
 
 class FasterRCNN(tf.keras.Model):
-    def __init__(self, num_classes, actclassoutputs, l2 = 0): # TODO : Add level 3 of detector network
+    def __init__(self, num_classes, actclassoutputs, l2 = 0,dropout_prob=0):
         super.__init__()
         
         self._num_classes = num_classes
@@ -19,7 +20,13 @@ class FasterRCNN(tf.keras.Model):
         max_proposals_post_nms_train = 2000,
         max_proposals_pre_nms_infer = 6000,
         max_proposals_post_nms_infer = 300,
-          l2 = l2
+        l2 = l2
+        )
+        self._level3_detector_network=detector.DN(
+            n_of_classes=num_classes,
+            actclassoutputs=actclassoutputs,
+            l2=l2,
+            dropout_prob=dropout_prob
         )
 
     def call(self,inputs,training = False):
@@ -42,25 +49,69 @@ class FasterRCNN(tf.keras.Model):
             ],
             training = training
         )
+        if training:
+            proposals, gt_classes, gt_box_deltas = self.label_proposals(
+                proposals = proposals,
+                gt_box_class_idxs = gt_box_class_idx_map[0],
+                gt_box_corners = gt_box_corner_map[0],
+                min_background_iou_threshold = 0.0,
+                min_object_iou_threshold = 0.5
+            )
+            proposals, gt_classes, gt_box_deltas = self.sample_proposals(
+                proposals = proposals,
+                gt_classes = gt_classes,
+                gt_box_deltas = gt_box_deltas,
+                max_proposals = 128,
+                positive_fraction = 0.25
+            )
+            gt_classes = tf.expand_dims(gt_classes, axis = 0)   
+            gt_box_deltas = tf.expand_dims(gt_box_deltas, axis = 0)   
+            proposals = tf.stop_gradient(proposals)
+            gt_classes = tf.stop_gradient(gt_classes)
+            gt_box_deltas = tf.stop_gradient(gt_box_deltas)
+            
 
-        # TODO: At third level, use detector
-
+        # At third level, use detector
+        d_classes,d_box_deltas=self._level3_detector_network(
+            inputs=[
+                input_image,
+                feature_map,
+                proposals
+            ],training=training
+        )       
 
         #Losses
         if training:
             rpn_class_loss = self._level2_rpn.cls_loss(y_pred = rpn_scores, gt_rpn_map = gt_rpn_map)
             rpn_reg_loss = self._level2_rpn.reg_loss(y_pred = rpn_scores, gt_rpn_map = gt_rpn_map)
+            d_class_loss = self._stage3_detector_network.class_loss(y_predicted = d_classes, y_true = gt_classes, from_logits = not self._outputs_convert_to_probability)
+            d_reg_loss = self._stage3_detector_network.regression_loss(y_predicted = d_box_deltas, y_true = gt_box_deltas)
             self.add_loss(rpn_class_loss)
             self.add_loss(rpn_reg_loss)
+            self.add_loss(d_class_loss)
+            self.add_loss(d_reg_loss)
             self.add_metric(rpn_class_loss, name = "rpn_class_loss")
             self.add_metric(rpn_reg_loss, name = "rpn_reg_loss")
-            # TODO: Add detector losses and metrics
+            self.add_metric(d_class_loss, name = "detector_class_loss")
+            self.add_metric(d_reg_loss, name = "detector_regression_loss")
         else:
             # During inference, losses don't matter
             rpn_class_loss = float("inf")
             rpn_reg_loss = float("inf")
-            detector_reg_loss = float("inf")
-            detector_class_loss = float("inf")
+            d_reg_loss = float("inf")
+            d_class_loss = float("inf")
+
+        return [
+            rpn_scores,
+            rpn_box_deltas,
+            d_classes,
+            d_box_deltas,
+            proposals,
+            rpn_class_loss,
+            rpn_reg_loss,
+            d_class_loss,
+            d_reg_loss
+        ]
 
 
     def _predictions_to_scored_bboxes(self,input_image, classes, box_deltas, proposals, score_threshhold):
@@ -100,11 +151,11 @@ class FasterRCNN(tf.keras.Model):
             proposal_boxes = proposal_boxes[required_scores]
             scores = scores[required_scores]
 
-            pred_by_idx[class_idx] = (proposal_boxes, scores)
+            preds_by_idx[class_idx] = (proposal_boxes, scores)
 
         # NMS
         result = {}
-        for class_idx, (boxes,scores) in pred_by_idx.items():
+        for class_idx, (boxes,scores) in preds_by_idx.items():
             indexes = tf.image.non_max_suppression(
                 boxes = boxes,
                 scores = scores,
@@ -118,4 +169,70 @@ class FasterRCNN(tf.keras.Model):
             result[class_idx] = scored_boxes
 
         return result
+
+    def label_proposals(self, proposals, gt_box_class_idxs, gt_box_corners, min_bg_iou_threshold, min_obj_iou_threshold):
+        proposals = tf.concat([ proposals, gt_box_corners ], axis = 0)#creating fake proposals so that there are always some positive examples during training
+        total_ious = utils.iou(bbox1=proposals, bbox2=gt_box_corners)#N,M #computes the IoU b/w each proposal and each ground truth box, resulting in an IoU matrix.
+        best_ious = tf.math.reduce_max(total_ious, axis = 1) # (N,) of max IoUs for each of the N proposals
+        indexes=tf.math.argmax(total_ious,axis=1) #(N,) indexes of best proposal
+        gt_box_class_idxs=tf.gather(gt_box_class_idxs, indices = indexes)   
+        gt_box_corners = tf.gather(gt_box_corners, indices = indexes)#(N,4) highest IoU box for each proposal
+        idxs = tf.where(best_ious >= min_bg_iou_threshold)# proposals with  sufficiently high IoU
+        proposals = tf.gather_nd(proposals, indices = idxs)
+        best_ious = tf.gather_nd(best_ious, indices = idxs)
+        gt_box_class_idxs = tf.gather_nd(gt_box_class_idxs, indices = idxs)
+        gt_box_corners = tf.gather_nd(gt_box_corners, indices = idxs)
+
+        retain_mask = tf.cast(best_ious >= min_obj_iou_threshold, dtype = gt_box_class_idxs.dtype)# if condn true then 1 else 0
+        gt_box_class_idxs = gt_box_class_idxs * retain_mask #if retain_mask=0 then it effectively labels proposals as background. 
+
+        num_classes = self._num_classes
+        gt_classes = tf.one_hot(indices = gt_box_class_idxs, depth = num_classes)
+
+        #calculate centres and side lengths for proposals and ground truth boxes
+        proposal_centers = 0.5 * (proposals[:,0:2] + proposals[:,2:4])          
+        proposal_sides = proposals[:,2:4] - proposals[:,0:2]                    
+        gt_box_centers = 0.5 * (gt_box_corners[:,0:2] + gt_box_corners[:,2:4])  
+        gt_box_sides = gt_box_corners[:,2:4] - gt_box_corners[:,0:2]      
+
+        detector_box_delta_means = tf.constant([0, 0, 0, 0], dtype = tf.float32)
+        detector_box_delta_stds = tf.constant([0.1, 0.1, 0.2, 0.2], dtype = tf.float32)
+        tyx = (gt_box_centers - proposal_centers) / proposal_sides # # ty = (gt_center_y - proposal_center_y) / proposal_height, tx = (gt_center_x - proposal_center_x) / proposal_width
+        thw = tf.math.log(gt_box_sides / proposal_sides) # th = log(gt_height / proposal_height), tw = (gt_width / proposal_width)
+        box_delta_targets = tf.concat([ tyx, thw ], axis = 1) #      
+        box_delta_targets = (box_delta_targets - detector_box_delta_means) / detector_box_delta_stds
+
+        gt_box_deltas_mask = tf.repeat(gt_classes, repeats = 4, axis = 1)[:,4:]          
+        gt_box_deltas_values = tf.tile(box_delta_targets, multiples = [1, num_classes - 1]) 
+        gt_box_deltas_mask = tf.expand_dims(gt_box_deltas_mask, axis = 0)     
+        gt_box_deltas_values = tf.expand_dims(gt_box_deltas_values, axis = 0) 
+        gt_box_deltas = tf.concat([ gt_box_deltas_mask, gt_box_deltas_values ], axis = 0) 
+        gt_box_deltas = tf.transpose(gt_box_deltas, perm = [ 1, 0, 2])       
+
+        return proposals, gt_classes, gt_box_deltas
+
+    def sample_proposals(self, proposals, gt_classes, gt_box_deltas, max_proposals, positive_fraction):
+        if max_proposals<=0:
+            return proposals,gt_classes,gt_box_deltas
+        c_indices = tf.argmax(gt_classes, axis=1)#the class index with the highest score for each ground truth box
+        p_indices = tf.squeeze(tf.where(c_indices > 0), axis = 1)#identifes positve non-background class
+        n_indices = tf.squeeze(tf.where(c_indices <= 0), axis = 1)#)#identifes negative background class
+        
+        num_p_proposals = tf.size(p_indices)
+        num_n_proposals = tf.size(n_indices)        
+        
+        num_samples = tf.minimum(max_proposals, tf.size(c_indices))#determines no.of proposals to be considered
+        num_p_samples = tf.minimum(tf.cast(tf.math.round(tf.cast(num_samples, dtype = float) * positive_fraction), dtype = num_samples.dtype), num_p_proposals)
+        num_n_samples = tf.minimum(num_samples - num_p_samples, num_n_proposals)
+        #randomly shuffle the positive and negative indices and select the required number of samples for each
+        p_sample_indices = tf.random.shuffle(p_indices)[:num_p_samples]
+        n_sample_indices = tf.random.shuffle(n_indices)[:num_n_samples]
+        
+        indices = tf.concat([p_sample_indices, n_sample_indices], axis=0)
+
+        return tf.gather(proposals, indices = indices), tf.gather(gt_classes, indices = indices), tf.gather(gt_box_deltas, indices = indices)
+
+
+
+            
 
