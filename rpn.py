@@ -76,7 +76,7 @@ class RPN(tf.keras.Model):
         # Performing non max suppression
         indices = tf.image.non_max_suppression(
             boxes = proposals,
-            scores = objectenss_scores,
+            scores = objectness_scores,
             max_output_size = max_proposals_post_nms,
             iou_threshold = 0.7
         )
