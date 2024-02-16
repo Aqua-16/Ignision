@@ -1,4 +1,5 @@
 import tensorflow as tf
+import cv2
 
 def iou(bbox1,bbox2):
     # These create tensors that will help compute the iou of each box in bbox1 with each box in bbox2
@@ -39,32 +40,21 @@ def deltas_to_bboxes(deltas,means,stds,anchors):
     bboxes = tf.concat([box_left_top,box_right_bottom],axis = 1)
     return bboxes
 
+def show_detections(out_path,image,scored_boxes_class_idx,class_idx_name):
+    image_ = image.copy()
+    color = (32,32,32)
+    for cls_idx,scored_boxes in scored_boxes_class_idx.items():
+        for i in range(scored_boxes.shape[0]):
+            scored_box = scored_boxes[i:][0:4].astype(int)
+            cls_name = class_idx_name[cls_idx]
 
-'''------------------------------------------------------------------------------------------------------------------------------------------------------------
+            cv2.rectangle(image_,(scored_box[0],scored_box[1]),(scored_box[2],scored_box[3]),color, thickness = 2)
+            cv2.putText(image_,cls_name,(scored_box[1],scored_box[0]),cv2.FONT_HERSHEY_SIMPLEX,1.5,color,thickness = 1.8)
 
-These are just testing calls to test the functions created. To be removed at the end.
+    cv2.imshow("Detections", image_with_detections)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
-import numpy as np
-
-boxes1 = np.array([
-    [10, 20, 30, 40],
-    [15, 25, 35, 45],
-    [12, 22, 32, 42],
-    [18, 28, 38, 48],
-    [11, 21, 31, 41],
-    [16, 26, 36, 46]
-])
-boxes1 = tf.convert_to_tensor(boxes1)
-# Generate bounding boxes for boxes2 (shape: (M, 4))
-boxes2 = np.array([
-    [25, 35, 20, 30],
-    [14, 24, 34, 44],
-    [22, 32, 12, 22],
-    [19, 29, 39, 49],
-    [13, 23, 33, 43]
-])
-boxes2 = tf.convert_to_tensor(boxes2)
-
-out = iou(boxes1,boxes2)
-print(out)
-'''
+    if out_path is not None:
+        cv2.imwrite(out_path,image_)
+        print("Successfully saved image to '%s'" %out_path)
