@@ -30,9 +30,9 @@ class BackBone(tf.keras.Model):
         self.block4_conv3 = Conv2D(name = "block4_conv3", kernel_size = (3,3), strides = 1, padding = "same", filters = 512, activation = "relu", kernel_initializer = initial_weights, kernel_regularizer = regularizer)
         self.block4_maxpool = MaxPooling2D(name = "block4_pool", pool_size = 2, strides = 2)
 
-        self.block5_conv1 = Conv2D(name = "block3_conv1", kernel_size = (3,3), strides = 1, padding = "same", filters = 512, activation = "relu", kernel_initializer = initial_weights, kernel_regularizer = regularizer)
-        self.block5_conv2 = Conv2D(name = "block3_conv2", kernel_size = (3,3), strides = 1, padding = "same", filters = 512, activation = "relu", kernel_initializer = initial_weights, kernel_regularizer = regularizer)
-        self.block5_conv3 = Conv2D(name = "block3_conv3", kernel_size = (3,3), strides = 1, padding = "same", filters = 512, activation = "relu", kernel_initializer = initial_weights, kernel_regularizer = regularizer)
+        self.block5_conv1 = Conv2D(name = "block5_conv1", kernel_size = (3,3), strides = 1, padding = "same", filters = 512, activation = "relu", kernel_initializer = initial_weights, kernel_regularizer = regularizer)
+        self.block5_conv2 = Conv2D(name = "block5_conv2", kernel_size = (3,3), strides = 1, padding = "same", filters = 512, activation = "relu", kernel_initializer = initial_weights, kernel_regularizer = regularizer)
+        self.block5_conv3 = Conv2D(name = "block5_conv3", kernel_size = (3,3), strides = 1, padding = "same", filters = 512, activation = "relu", kernel_initializer = initial_weights, kernel_regularizer = regularizer)
 
     def call(self,input_image):
         blocks = [self.block1_conv1, self.block1_conv2, self.block1_maxpool, 
