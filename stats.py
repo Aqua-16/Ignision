@@ -1,7 +1,7 @@
 from collections import defaultdict
 import numpy as np
 
-from utils import iou
+from utils import iou #TODO
 
 class train_statistics:
 
@@ -27,10 +27,10 @@ class train_statistics:
 
     def progress_bar_postfix(self):
         return {
-          "rpn_class_loss": "%1.4f" % self.rpn_class_loss,
-          "rpn_regr_loss": "%1.4f" % self.rpn_reg_loss,
-          "detector_class_loss": "%1.4f" % self.detector_class_loss,
-          "detector_regr_loss": "%1.4f" % self.detector_reg_loss,
-          "total_loss": "%1.2f" % (self.rpn_class_loss + self.rpn_reg_loss + self.detector_class_loss + self.detector_reg_losses)
+        "rpn_class_loss": "%1.4f" % self.rpn_class_loss,
+        "rpn_regr_loss": "%1.4f" % self.rpn_reg_loss,
+        "detector_class_loss": "%1.4f" % self.detector_class_loss,
+        "detector_regr_loss": "%1.4f" % self.detector_reg_loss,
+        "total_loss": "%1.2f" % (self.rpn_class_loss + self.rpn_reg_loss + self.detector_class_loss + self.detector_reg_losses)
     }
     
