@@ -105,4 +105,3 @@ class DN(tf.keras.Model):
         relevant_loss_terms = y_mask * losses
         return scale_factor * tf.reduce_sum(relevant_loss_terms) / N #scaled by the scale_factor and divided by N
 
-
