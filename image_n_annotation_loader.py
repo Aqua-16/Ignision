@@ -12,6 +12,8 @@ import anchors
 
 class Dataset:
   
+  num_classes = 2
+  class_index_to_name = {0:"background",1:"fire"}
   def __init__(self, direc = "dataset", _feature_pixels = 16, augmenting = True, shuffling = True):#if dataset is in any other folder directly change the directory from here
     '''
       direc: directory of dataset
@@ -22,9 +24,8 @@ class Dataset:
     if not os.path.exists(direc):
       raise FileNotFoundError(f"Dataset directory does not exist: {direc}")
     
-
     self.direc = direc
-    self.class_index_to_name = {0:"background",1:"fire"}
+    self.class_index_to_name = class_index_to_name
     self.class_name_to_index = {"background":0,"fire":1}
     self.num_classes = 2
     self.filepaths = self.file_paths()#returns a list of image file paths
