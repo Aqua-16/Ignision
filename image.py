@@ -40,7 +40,7 @@ def show_detections(out_path,image,scored_boxes_class_idx,class_idx_name):
             cv2.rectangle(image_,(scored_box[0],scored_box[1]),(scored_box[2],scored_box[3]),color, thickness = 2)
             cv2.putText(image_,cls_name,(scored_box[1],scored_box[0]),cv2.FONT_HERSHEY_SIMPLEX,1.5,color,thickness = 1.8)
 
-    cv2.imshow("Detections", image_with_detections)
+    cv2.imshow("Detections", image_)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
