@@ -7,7 +7,7 @@ import utils
 
 class RPN(tf.keras.Model):
     def __init__(self,max_proposals_pre_nms_train, max_proposals_post_nms_train, max_proposals_pre_nms_pred, max_proposals_post_nms_pred, l2 = 0):
-        super.__init__()
+        super().__init__()
 
         self.max_proposals_pre_nms_train = max_proposals_pre_nms_train
         self.max_proposals_post_nms_train = max_proposals_post_nms_train
