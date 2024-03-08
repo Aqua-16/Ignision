@@ -116,7 +116,7 @@ def train(model):
 
     # Call evaluation metric once more
 
-def _predict(model,url,show_image,output_path):
+def _predict(model,url,output_path):
     image_data, image, _ = image.load_image(path = url)
     anchor_map = anchors.generate_anchor_map(image_shape = image_data.shape, feature_scale = 16)
     anchor_map = np.expand_dims(anchor_map,axis = 0)
@@ -190,6 +190,6 @@ if __name__ == '__main__':
     elif options.eval:
         # Perform Model Evaluation
     elif options.predict:
-        _predict(model = model, url = options.predict, show_image = True, output_path = None)
+        _predict(model = model, url = options.predict, output_path = None)
     elif options.predict_to_file:
-        _predict(model = model, url = options.predict_to_file, show_image = False, output_path = "pred.jpg")
+        _predict(model = model, url = options.predict_to_file, output_path = "pred.jpg")
