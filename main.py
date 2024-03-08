@@ -117,7 +117,7 @@ def train(model):
     # Call evaluation metric once more
 
 def _predict(model,url,show_image,output_path):
-    image_data, image, _ = load_image(url = url)
+    image_data, image, _ = image.load_image(path = url)
     anchor_map = anchors.generate_anchor_map(image_shape = image_data.shape, feature_scale = 16)
     anchor_map = np.expand_dims(anchor_map,axis = 0)
     image_data = np.expand_dims(image_data,axis = 0) # Converting to Batch size of 1
