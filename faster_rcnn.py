@@ -115,29 +115,29 @@ class FasterRCNN(tf.keras.Model):
 
     def load_imgnet_wts(self):
     # Load weights from Keras VGG-16 model pre-trained on ImageNet
-    keras_model = tf.keras.applications.VGG16(weights = "imagenet")
-    vgg16 = self._level1_feature_extractor.layers + self._level3_detector_network.layers
-    for model_layer in keras_model.layers:
-        w = model_layer.get_weights()
-        if(len(w)>0):
-            new_layer = None
-            for layer in vgg16:
-                if(layer.name == model_layer.name):
-                    new_layer = layer
-                    break
-            if(new_layer):
-                print("Loading VGG-16 ImageNet weights into layer: %s" % new_layer.name)
-                new_layer.set_weights(weights)
+        keras_model = tf.keras.applications.VGG16(weights = "imagenet")
+        vgg16 = self._level1_feature_extractor.layers + self._level3_detector_network.layers
+        for model_layer in keras_model.layers:
+            w = model_layer.get_weights()
+            if(len(w)>0):
+                new_layer = None
+                for layer in vgg16:
+                    if(layer.name == model_layer.name):
+                        new_layer = layer
+                        break
+                if(new_layer):
+                    print("Loading VGG-16 ImageNet weights into layer: %s" % new_layer.name)
+                    new_layer.set_weights(w)
                 
     def predict_on_batch(self,x,threshold):
-    _,_,detector_cls,detector_box_deltas,proposals,_,_,_,_ = super().predict_on_batch(x=x)
-    scored_bboxes = self.predictions_to_scored_bboxes(self,
-                                                      input_image = x[0], 
-                                                      classes = detector_cls, 
-                                                      box_deltas = detector_box, 
-                                                      proposals = proposals, 
-                                                      score_threshhold = threshold)
-    return scored_bboxes
+        _,_,detector_cls,detector_box_deltas,proposals,_,_,_,_ = super().predict_on_batch(x=x)
+        scored_bboxes = self.predictions_to_scored_bboxes(self,
+                                                        input_image = x[0], 
+                                                        classes = detector_cls, 
+                                                        box_deltas = detector_box_deltas, 
+                                                        proposals = proposals, 
+                                                        score_threshhold = threshold)
+        return scored_bboxes
 
     
 
