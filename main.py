@@ -3,7 +3,6 @@ import numpy as np
 import os
 import random
 from tqdm import tqdm
-from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.optimizers import Adam
 import tensorflow as tf
 
@@ -73,6 +72,49 @@ def _convert_sample_to_model_input(sample,mode):
       x = [ image_data, anchor_map, anchor_valid_map ]
 
     return x, image_data, gt_rpn_minibatch # Returned like so for convenience
+
+def train(model):
+    print("Starting Model Training....")
+    print("||----------------------------------------------||")
+    print(f"Training split            : {options.train_split}")
+    print(f"Evaluation split          : {options.eval_split}")
+    print(f"Epochs                    : {options.epochs}")
+    print(f"Learning Rate             : {options.learning_rate}")
+    print(f"Weight decay              : {options.weight_decay}")
+    print(f"Dropout                   : {options.dropout}")
+
+    training_data = dataset.Dataset()
+    eval_data = dataset.Dataset(augmenting = False, shuffling = False)
+
+    if options.checkpoint_dir and not os.path.exists(options.checkpoint_dir):
+        os.makedirs(options.checkpoint_dir)
+    if options.save_best_to:
+        best_weights_tracker = utils.BestWeightsTracker(filepath = options.save_best_to)
+
+    for epoch in (1,1+options.epochs):
+        print(f"Epoch        {epoch}/{options.epochs}")
+        stats = train_statistics()
+        progbar = tqdm(iterable = iter(training_data), total = training_data.num_samples, postfix = stats.progress_bar_postfix())
+        for sample in progbar:
+            x, image_data, gt_rpn_minibatch = _convert_sample_to_model_input(sample = sample, mode = "train")
+            losses = model.train_on_batch(x = x, y = gt_rpn_minibatch, return_dict = True)
+            stats.during_training_step(losses = losses)
+            progbar.set_postfix(stats.progress_bar_postfix())
+        mAP = None # Calculated by an evaluation metric function
+        if options.checkpoint_dir:
+            checkpoint_file = os.path.join(options.checkpoint_dir, "checkpoint-epoch-%d-mAP-%1.1f.h5" % (epoch, mAP))
+            model.save_weights(filepath = checkpoint_file, overwrite = True, save_format = "h5")
+            print("Saved model checkpoint to '%s'" % checkpoint_file)
+
+        if options.save_best_to:
+            best_weights_tracker.on_epoch_end(model = model, mAP = mAP)
+
+    if options.save_best_to:
+        best_weights_tracker.restore_and_save_best_weights(model = model)
+
+    print("Evaluating the final model...")
+
+    # Call evaluation metric once more
 
 def _predict(model,url,show_image,output_path):
     image_data, image, _ = load_image(url = url)
