@@ -73,6 +73,28 @@ def _convert_sample_to_model_input(sample,mode):
 
     return x, image_data, gt_rpn_minibatch # Returned like so for convenience
 
+def evaluate(model,eval_data=None,num_samples = None, plot=False,print_AP=False):
+    prc=PRCCalc()
+    i=0
+    print(f"Evaluating {eval_data.split} ...")
+    for sample in tqdm(iterable=iter(eval_data), total=num_samples):
+        x, _ , _ = _convert_sample_to_model_input(sample = sample, mode = "infer")
+        scored_boxes_by_class_index = model.predict_on_batch(x = x, score_threshold = 0.1)# lower threshold score for evaluation
+        prc.add_img_result(
+            scored_boxes_by_class_index = scored_boxes_by_class_index,
+            gt_boxes = sample.gt_boxes
+        )
+        i+=1
+        if i>=num_samples:
+            break
+    if print_AP:
+        prc.print_avg_precisions(class_index_to_name=dataset.Dataset.class_index_to_name)
+    mAP=100.0*prc.compute_mean_avg_prec()
+    print(f"Mean Average Precision = {mAP:1.2f}%")
+    if plot:
+        prc.plot_avg_precisions(class_index_to_name=dataset.Dataset.class_index_to_name)
+    return mAP
+
 def train(model):
     print("Starting Model Training....")
     print("||----------------------------------------------||")
@@ -98,7 +120,13 @@ def train(model):
             losses = model.train_on_batch(x = x, y = gt_rpn_minibatch, return_dict = True)
             stats.during_training_step(losses = losses)
             progbar.set_postfix(stats.progress_bar_postfix())
-        mAP = None # Calculated by an evaluation metric function
+        mAP = evaluate( # Mean Average Precision
+                model=model,
+                eval_data=eval_data,
+                num_samples=50,
+                plot=False,
+                print_AP=False
+        ) 
         if options.checkpoint_dir:
             checkpoint_file = os.path.join(options.checkpoint_dir, "checkpoint-epoch-%d-mAP-%1.1f.h5" % (epoch, mAP))
             model.save_weights(filepath = checkpoint_file, overwrite = True, save_format = "h5")
@@ -112,7 +140,13 @@ def train(model):
 
     print("Evaluating the final model...")
 
-    # Call evaluation metric once more
+    evaluate(
+        model = model,
+        eval_data = eval_data,
+        num_samples = eval_data.num_samples,
+        plot = options.plot,
+        print_AP = True
+    )
 
 def _predict(model,url,output_path):
     image_data, image, _ = image.load_image(path = url)
@@ -184,7 +218,7 @@ if __name__ == '__main__':
     if options.train:
         train(model=model)
     elif options.eval:
-        #TODO
+        evaluate(model = model, plot = options.plot, print_AP = True)
     elif options.predict:
         _predict(model = model, url = options.predict, output_path = None)
     elif options.predict_to_file:
