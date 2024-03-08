@@ -89,7 +89,7 @@ class Dataset:
       scaled_box = Box(
         class_index = box.class_index,
         class_name = box.class_name,
-        corners = corners * scale_factor 
+        corners = corners
       )
       scaled_gt_boxes.append(scaled_box)
 
