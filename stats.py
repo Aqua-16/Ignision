@@ -113,7 +113,7 @@ class PRCCalc:
 
         return avg_precision, recall, precision
     
-    def compute_mean_avg_pred(self):
+    def compute_mean_avg_prec(self):
         avg_precisions = []
         for class_index in self._obj_cnt_by_classindex:
             avg_precision, _, _ = self.compute_avg_precision(class_index = class_index)
