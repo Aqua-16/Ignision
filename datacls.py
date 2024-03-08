@@ -19,7 +19,7 @@ class Box:
 class TrainingSample:
     anchor_map: np.ndarray 
     gt_rpn_map: np.ndarray
-    gt_rpn_object_indices: List[Tuple[int,int,int]]
+    gt_rpn_object_indices: List[Tuple[int,int,int]] # Stores y, x and k values, where k is the ratio, x is horizontal val and y is vertical val
     gt_rpn_background_indices: List[Tuple[int,int,int]]
     gt_boxes: List[Box]
     image_data: np.ndarray
