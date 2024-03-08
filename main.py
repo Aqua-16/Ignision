@@ -15,6 +15,65 @@ import utils
 import anchors
 import image
 
+def _get_sample_rpn_minibatch(rpn_map,object_indices,background_indices,mini_size):
+    # This selects a subset of anchors for training and returns a copy of the ground truth RPN map with only those anchors marked for training
+
+    assert rpn_map.shape[0] == 1, "Batch size must be 1"
+    assert len(object_indices) == 1, "Batch size must be 1"
+    assert len(background_indices) == 1, "Batch size must be 1"
+    positive_anchors = object_indices[0]
+    negative_anchors = background_indices[0]
+
+    assert len(positive_anchors) + len(negative_anchors) >= mini_size, f"Image has insufficient anchors for RPN minibatch size"
+    assert len(positive_anchors) > 0, "Image does not have any positive anchors"
+    assert mini_size % 2 == 0, "RPN minibatch size must be even"
+
+    num_pos = len(positive_anchors)
+    num_neg = len(negative_anchors)
+    num_pos_samples = min(mini_size//2, num_pos) # At least half of the minibatch should comprise of positive samples
+    num_neg_samples = mini_size - num_pos_samples
+    pos_indices = random.sample(range(num_pos), num_pos_samples)
+    neg_indices = random.sample(range(num_neg), num_neg_samples)
+
+    positive_anchors = positive_anchors[pos_indices]
+    negative_anchors = negative_anchors[neg_indices]
+    train_anchors = np.concatenate([positive_anchors, negative_anchors])
+    batch_idx = np.zeros(len(train_anchors), dtype = int)
+    train_indices = (batch_idx, train_anchors[:,0], train_anchors[:,1], train_anchors[:,2], 0)
+
+    rpn_minibatch = rpn_map.copy()
+    rpn_minibatch[:,:,:,:,0] = 0
+    rpn_minibatch[train_indices] = 1
+
+    return rpn_minibatch
+
+def _convert_sample_to_model_input(sample,mode):
+    gt_box_corners = np.array([ box.corners for box in sample.gt_boxes ]).astype(np.float32) 
+    gt_box_class_idxs = np.array([ box.class_index for box in sample.gt_boxes ]).astype(np.int32) 
+    gt_box_corners = np.expand_dims(gt_box_corners, axis = 0)
+    gt_box_class_idxs = np.expand_dims(gt_box_class_idxs, axis = 0)
+
+    image_data = np.expand_dims(sample.image_data, axis = 0)
+    image_shape_map = np.array([ [ image_data.shape[1], image_data.shape[2], image_data.shape[3] ] ])
+    anchor_map = np.expand_dims(sample.anchor_map, axis = 0)
+    gt_rpn_map = np.expand_dims(sample.gt_rpn_map, axis = 0)
+    gt_rpn_object_indices = [ sample.gt_rpn_object_indices ]
+    gt_rpn_background_indices = [ sample.gt_rpn_background_indices ]
+
+    gt_rpn_minibatch =  _get_sample_rpn_minibatch(
+      rpn_map = gt_rpn_map,
+      object_indices = gt_rpn_object_indices,
+      background_indices = gt_rpn_background_indices,
+      mini_size = 256
+    )
+
+    if mode == "train":
+      x = [ image_data, anchor_map, gt_rpn_minibatch, gt_box_class_idxs, gt_box_corners ]
+    else: # prediction
+      x = [ image_data, anchor_map, anchor_valid_map ]
+
+    return x, image_data, gt_rpn_minibatch # Returned like so for convenience
+
 def _predict(model,url,show_image,output_path):
     image_data, image, _ = load_image(url = url)
     anchor_map = anchors.generate_anchor_map(image_shape = image_data.shape, feature_scale = 16)
