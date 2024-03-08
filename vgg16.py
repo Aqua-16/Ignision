@@ -6,7 +6,7 @@ from tensorflow.keras.initializers import GlorotNormal
 
 class BackBone(tf.keras.Model):
     def __init__(self,l2):
-        super.__init__()
+        super().__init__()
 
         initial_weights = GlorotNormal(seed = 42)
         regularizer = tf.keras.regularizers.l2(l2)
