@@ -10,7 +10,7 @@ import detector
 
 class FasterRCNN(tf.keras.Model):
     def __init__(self, num_classes, actclassoutputs, l2 = 0,dropout_prob=0):
-        super.__init__()
+        super().__init__()
         
         self._num_classes = num_classes
         self._outputs_convert_to_probability = actclassoutputs
@@ -18,8 +18,8 @@ class FasterRCNN(tf.keras.Model):
         self._level2_rpn = rpn.RPN(
         max_proposals_pre_nms_train = 12000,
         max_proposals_post_nms_train = 2000,
-        max_proposals_pre_nms_infer = 6000,
-        max_proposals_post_nms_infer = 300,
+        max_proposals_pre_nms_pred = 6000,
+        max_proposals_post_nms_pred = 300,
         l2 = l2
         )
         self._level3_detector_network=detector.DN(
