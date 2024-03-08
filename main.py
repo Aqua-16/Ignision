@@ -60,24 +60,22 @@ def _convert_sample_to_model_input(sample,mode):
     gt_rpn_background_indices = [ sample.gt_rpn_background_indices ]
 
     gt_rpn_minibatch =  _get_sample_rpn_minibatch(
-      rpn_map = gt_rpn_map,
-      object_indices = gt_rpn_object_indices,
-      background_indices = gt_rpn_background_indices,
-      mini_size = 256
+        rpn_map = gt_rpn_map,
+        object_indices = gt_rpn_object_indices,
+        background_indices = gt_rpn_background_indices,
+        mini_size = 256
     )
 
     if mode == "train":
-      x = [ image_data, anchor_map, gt_rpn_minibatch, gt_box_class_idxs, gt_box_corners ]
+        x = [ image_data, anchor_map, gt_rpn_minibatch, gt_box_class_idxs, gt_box_corners ]
     else: # prediction
-      x = [ image_data, anchor_map, anchor_valid_map ]
+        x = [ image_data, anchor_map ]
 
     return x, image_data, gt_rpn_minibatch # Returned like so for convenience
 
 def train(model):
     print("Starting Model Training....")
     print("||----------------------------------------------||")
-    print(f"Training split            : {options.train_split}")
-    print(f"Evaluation split          : {options.eval_split}")
     print(f"Epochs                    : {options.epochs}")
     print(f"Learning Rate             : {options.learning_rate}")
     print(f"Weight decay              : {options.weight_decay}")
@@ -92,11 +90,11 @@ def train(model):
         best_weights_tracker = utils.BestWeightsTracker(filepath = options.save_best_to)
 
     for epoch in (1,1+options.epochs):
-        print(f"Epoch        {epoch}/{options.epochs}")
+        print(f"Epoch       {epoch}/{options.epochs}")
         stats = train_statistics()
         progbar = tqdm(iterable = iter(training_data), total = training_data.num_samples, postfix = stats.progress_bar_postfix())
         for sample in progbar:
-            x, image_data, gt_rpn_minibatch = _convert_sample_to_model_input(sample = sample, mode = "train")
+            x, _, gt_rpn_minibatch = _convert_sample_to_model_input(sample = sample, mode = "train")
             losses = model.train_on_batch(x = x, y = gt_rpn_minibatch, return_dict = True)
             stats.during_training_step(losses = losses)
             progbar.set_postfix(stats.progress_bar_postfix())
@@ -142,8 +140,6 @@ if __name__ == '__main__':
     group.add_argument("--predict", metavar = "url", action = "store", type = str, help = "Run inference on image and display detected boxes")
     group.add_argument("--predict-to-file", metavar = "url", action = "store", type = str, help = "Run inference on image and render detected boxes to 'pred.jpg'")
     parser.add_argument("--load-from", metavar = "file", action = "store", help = "Load initial model weights from file")
-    parser.add_argument("--train-split", metavar = "name", action = "store", default = "trainval", help = "Dataset split to use for training")
-    parser.add_argument("--eval-split", metavar = "name", action = "store", default = "test", help = "Dataset split to use for evaluation")
     parser.add_argument("--plot", action = "store_true", help = "Plots the average precision after evaluation (use with --train or --eval)")
     parser.add_argument("--epochs", metavar = "count", type = int, action = "store", default = 1, help = "Number of epochs to train for")
     parser.add_argument("--learning-rate", metavar = "value", type = float, action = "store", default = 1e-3, help = "Learning rate")
@@ -186,9 +182,9 @@ if __name__ == '__main__':
         print("Initialized VGG-16 layers to Keras ImageNet weights")
 
     if options.train:
-        # Perform Model Training
+        train(model=model)
     elif options.eval:
-        # Perform Model Evaluation
+        #TODO
     elif options.predict:
         _predict(model = model, url = options.predict, output_path = None)
     elif options.predict_to_file:
