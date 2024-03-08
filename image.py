@@ -1,6 +1,15 @@
 import cv2
 import numpy as np
 
+LOW_VAL = 180
+HIGH_VAL = 255
+
+LOW_SAT = 40
+HIGH_SAT = 255
+
+LOW_HUE = 0
+HIGH_HUE = 39
+
 def preprocess_vgg16(image_data):
     image_data[:, :, 0] -= 103.939                # ImageNet B mean
     image_data[:, :, 1] -= 116.779                # ImageNet G mean
@@ -13,6 +22,9 @@ def load_image(path,flip=None):
     w = image.shape[1]
     if flip:
         cv2.flip(image,1)
+    image_HSV = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(image_HSV, (LOW_HUE, LOW_SAT, LOW_VAL), (HIGH_HUE, HIGH_SAT, HIGH_VAL))
+    image = cv2.bitwise_and(image, image, mask=mask)
     image_data = image.astype(np.float32)
     image_data = preprocess_vgg16(image_data)
     return image_data,image,(image_data.shape[0],h,w)
