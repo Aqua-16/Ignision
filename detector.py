@@ -10,7 +10,7 @@ from tensorflow.keras.layers import TimeDistributed
 import roi_pooling
 
 class DN(tf.keras.Model):
-    def __init__(self, n_of_classes, custom_roi_pool, actclassoutputs, l2, dropout_prob):
+    def __init__(self, n_of_classes, actclassoutputs, l2, dropout_prob):
         # custom_roi_pool is a flag indicating whether to use a custom roi pooling layer or not
         super().__init__()
         self._num_classes = n_of_classes
@@ -20,7 +20,7 @@ class DN(tf.keras.Model):
         class_initializer = tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.01)
         regressor_initializer = tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.001)
 
-        self._roi_pool = roi_pooling(pool_size = 7, name = "custom_roi_pool") if custom_roi_pool else None
+        #check      self._roi_pool = roi_pooling(pool_size = 7, name = "custom_roi_pool") if custom_roi_pool else None
 
         self._flatten = TimeDistributed(Flatten())#Used to flatten the input at each TimeStep, TimeDistributed used to iterate over each proposal independently
         self._fc1 = TimeDistributed(name = "fc1", layer = Dense(units = 4096, activation = "relu", kernel_regularizer = regularizer))#capture high level features

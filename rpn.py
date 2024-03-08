@@ -22,12 +22,12 @@ class RPN(tf.keras.Model):
         self.rpn_cls = Conv2D(name = "rpn_cls", kernel_size = (1,1), strides = 1, padding = "same", filters = anchor_num, kernel_initializer = initial_weights, activation = "softmax")
         self.rpn_reg = Conv2D(name = "rpn_reg", kernel_size = (1,1), strides = 1, padding = "same", filters = 4*anchor_num, kernel_initializer = initial_weights, activation = "linear")
 
-    def call(self, inputs, training):
+    def __call__(self, inputs, training):
         image = inputs[0]
         feature_map = inputs[1]
         anchor_map = inputs[2]
 
-        assert len(feature_map.shape) == 3   
+        assert len(feature_map.shape) == 4  
 
         if training:
             max_proposals_pre_nms, max_proposals_post_nms = self.max_proposals_pre_nms_train, self.max_proposals_post_nms_train
