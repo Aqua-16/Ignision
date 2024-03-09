@@ -67,7 +67,8 @@ class Dataset:
     if filepath in sample_by_filepath:
       sample = sample_by_filepath[filepath]
     else:
-      sample = self.generate_training_sample(filepath = filepath, flip = flip)
+      annotationpath=Dataset.filepathtoannotpath(filepath)
+      sample = self.generate_training_sample(filepath = annotationpath, flip = flip)
     print(sample)
     return sample
 
@@ -149,3 +150,12 @@ class Dataset:
     #     for box in boxes:
     #         print(box)
     return gt_boxes_by_filepath
+  
+  def filepathtoannotpath(filepath):
+      directory, filename = os.path.split(filepath)
+      
+      adir = directory.replace("Datacluster Fire and Smoke Sample", "Annotations")
+      
+      adir = os.path.join(adir, filename)
+      
+      return adir
