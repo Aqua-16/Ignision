@@ -6,8 +6,8 @@ def iou(bbox1,bbox2):
     boxes2 = tf.tile(bbox2,[tf.shape(bbox1)[0],1])
 
     # Extracting box coordinates of each pair of boxes
-    b1_y1,b1_x1,b1_y2,b1_x2 = tf.split(boxes1, 4, axis = 1)
-    b2_y1,b2_x1,b2_y2,b2_x2 = tf.split(boxes2, 4, axis = 1)
+    b1_y1,b1_x1,b1_y2,b1_x2 = [tf.cast(tensor, tf.float32) for tensor in tf.split(boxes1, 4, axis = 1)]
+    b2_y1,b2_x1,b2_y2,b2_x2 = [tf.cast(tensor, tf.float32) for tensor in tf.split(boxes2, 4, axis = 1)]
 
     # Calculating intersection area
     y1 = tf.maximum(b1_y1,b2_y1)
