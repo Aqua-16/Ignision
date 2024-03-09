@@ -42,7 +42,7 @@ def generate_anchor_map(image_shape,feature_scale):
     anchor_map[:,2:4] = anchors[:,2:4] - anchors[:,0:2]
 
     # This step is done only to ensure that the final shape is as expected.
-    anchor_map = anchor_map.reshape((h*w*num,4))
+    anchor_map = anchor_map.reshape((h,w,num*4))
     
     return anchor_map.astype("float32")
 
@@ -58,8 +58,9 @@ def generate_rpn_map(anchor_map, gt_boxes, object_threshold = 0.7, background_th
 
     # Generating anchor corners
     anchor_map = anchor_map.reshape((-1,4))
-    anchors = anchor_map[:,0:2] - 0.5*anchor_map[:,2:4]
-    anchors = anchors[:,0:2] + anchors[:,2:4]
+    anchors = np.empty(anchor_map.shape)
+    anchors[:,0:2] = anchor_map[:,0:2] - 0.5*anchor_map[:,2:4]
+    anchors[:,2:4] = anchor_map[:,0:2] + 0.5*anchor_map[:,2:4]
     n = anchors.shape[0]
 
     object_score = np.full(n,-1)
