@@ -83,9 +83,9 @@ def generate_rpn_map(anchor_map, gt_boxes, object_threshold = 0.7, background_th
     object_score[object_score<0] = 0
 
     # Box deltas for regression of anchor boxes
-    box_deltas = np.empty((num_anchors,4))
-    box_deltas[:,0:2] = (gt_box_centers - anchor_map[:,0:2])/anchor_map[:,2:4]
-    box_deltas[:,2:4] = np.log(gt_box_lengths/anchor_map[:,2:4])
+    box_deltas = np.empty((n,4))
+    box_deltas[:,0:2] = (gt_box_centers[gt_box_assignment] - anchor_map[:,0:2])/anchor_map[:,2:4]
+    box_deltas[:,2:4] = np.log(gt_box_lengths[gt_box_assignment]/anchor_map[:,2:4])
 
     rpn_map = np.empty((h,w,num_anchors,6))
     rpn_map[:,:,:,0] = mask.reshape((h,w,num_anchors))

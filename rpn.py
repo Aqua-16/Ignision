@@ -84,7 +84,7 @@ class RPN(tf.keras.Model):
     def _extract(self, anchor_map, objectness_score_map, box_delta_map):
         height = tf.shape(anchor_map)[1]
         width = tf.shape(anchor_map)[2]
-        num_anchors = tf.shape(anchor_map)[3]
+        num_anchors = tf.shape(anchor_map)[3]//4
       
         anchors = tf.reshape(anchor_map, shape = (height * width * num_anchors, 4))           
         scores = tf.reshape(objectness_score_map, shape = (height * width * num_anchors, 1))  
