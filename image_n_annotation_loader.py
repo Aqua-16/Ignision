@@ -67,8 +67,7 @@ class Dataset:
     if filepath in sample_by_filepath:
       sample = sample_by_filepath[filepath]
     else:
-      annotationpath=Dataset.filepathtoannotpath(filepath)
-      sample = self.generate_training_sample(filepath = annotationpath, flip = flip)
+      sample = self.generate_training_sample(filepath = filepath, flip = flip)
     print(sample)
     return sample
 
@@ -78,7 +77,8 @@ class Dataset:
 
     # Scale ground truth boxes to new image size
     scaled_gt_boxes = []
-    for box in self.gt_boxes_by_filepath[filepath]:
+    annotationpath=Dataset.filepathtoannotpath(filepath)
+    for box in self.gt_boxes_by_filepath[annotationpath]:
       if flip:
         corners = np.array([
           box.corners[0],
@@ -95,7 +95,7 @@ class Dataset:
       )
       scaled_gt_boxes.append(scaled_box)
 
-    anchor_map = anchors.generate_anchor_map(image_shape = scaled_image_data.shape, feature_pixels = self.feature_pixels)
+    anchor_map = anchors.generate_anchor_map(image_shape = scaled_image_data.shape, feature_scale = self.feature_pixels)
     gt_rpn_map, gt_rpn_object_indices, gt_rpn_background_indices = anchors.generate_rpn_map(anchor_map = anchor_map, gt_boxes = scaled_gt_boxes)
 
     # Return sample
@@ -153,7 +153,7 @@ class Dataset:
   
   def filepathtoannotpath(filepath):
       directory, filename = os.path.split(filepath)
-      
+      filename = filename.split(".")[0] + ".xml"
       adir = directory.replace("Datacluster Fire and Smoke Sample", "Annotations")
       
       adir = os.path.join(adir, filename)
