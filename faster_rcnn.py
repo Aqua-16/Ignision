@@ -249,7 +249,7 @@ class FasterRCNN(tf.keras.Model):
         num_n_proposals = tf.size(n_indices)        
         
         num_samples = tf.minimum(max_proposals, tf.size(c_indices))#determines no.of proposals to be considered
-        num_p_samples = tf.minimum(tf.cast(tf.math.round(tf.cast(num_samples, dtype = float) * positive_fraction), dtype = num_samples.dtype), num_p_proposals)
+        num_p_samples = tf.minimum(tf.cast(tf.math.round(tf.cast(num_samples, dtype = tf.float32) * positive_fraction), dtype = num_samples.dtype), num_p_proposals)
         num_n_samples = tf.minimum(num_samples - num_p_samples, num_n_proposals)
         #randomly shuffle the positive and negative indices and select the required number of samples for each
         p_sample_indices = tf.random.shuffle(p_indices)[:num_p_samples]

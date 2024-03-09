@@ -26,15 +26,9 @@ def generate_anchor_map(image_shape,feature_scale):
 
     anchor_center_grid = grid * feature_scale + 0.5 * feature_scale
     anchor_center_grid = np.tile(anchor_center_grid,2*num)
-    anchor_center_grid = anchor_center_grid.astype("float32") + anchors_base.flatten()
+    anchor_center_grid = anchor_center_grid.astype(np.float32) + anchors_base.flatten()
 
     anchors = anchor_center_grid.reshape((h*w*num,4))
-
-    # Clipping values to prevent anchors from going beyond image
-    height, width = image_shape[0],image_shape[1]
-    anchors = np.array([[y1/height,x1/width,y2/height,x2/width] for (y1,x1,y2,x2) in anchors])
-    anchors = np.clip(anchors,0,1)
-    anchors = np.array([[y1*height,x1*width,y2*height,x2*width] for (y1,x1,y2,x2) in anchors])
 
     # Creating anchor_map of the type [center_y,center_x, height, width] as is given in the paper
     anchor_map = np.empty((anchors.shape[0],4))
@@ -44,7 +38,7 @@ def generate_anchor_map(image_shape,feature_scale):
     # This step is done only to ensure that the final shape is as expected.
     anchor_map = anchor_map.reshape((h,w,num*4))
     
-    return anchor_map.astype("float32")
+    return anchor_map.astype(np.float32)
 
 def generate_rpn_map(anchor_map, gt_boxes, object_threshold = 0.7, background_threshold = 0.3):
 
@@ -79,7 +73,7 @@ def generate_rpn_map(anchor_map, gt_boxes, object_threshold = 0.7, background_th
     object_score[highest_anchor_idx] = 1 
     gt_box_assignment[:] = highest_gt_box_idx
 
-    mask = (object_score >= 0).astype("float32") # Creating mask for where objects are present
+    mask = (object_score >= 0).astype(np.float32) # Creating mask for where objects are present
     object_score[object_score<0] = 0
 
     # Box deltas for regression of anchor boxes
@@ -96,4 +90,4 @@ def generate_rpn_map(anchor_map, gt_boxes, object_threshold = 0.7, background_th
     pos_anchor_coords = rpn_map_coords[np.where((rpn_map[:,:,:,1] > 0) & (rpn_map[:,:,:,0] > 0))] # Anchors with object
     neg_anchor_coords = rpn_map_coords[np.where((rpn_map[:,:,:,1] == 0) & (rpn_map[:,:,:,0] > 0))] # Anchors without objects
 
-    return rpn_map.astype("float32"), pos_anchor_coords, neg_anchor_coords
+    return rpn_map.astype(np.float32), pos_anchor_coords, neg_anchor_coords

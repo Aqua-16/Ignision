@@ -3,7 +3,7 @@ import numpy as np
 import os
 import random
 from tqdm import tqdm
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import SGD
 import tensorflow as tf
 
 import warnings
@@ -67,7 +67,7 @@ def _convert_sample_to_model_input(sample,mode):
         rpn_map = gt_rpn_map,
         object_indices = gt_rpn_object_indices,
         background_indices = gt_rpn_background_indices,
-        mini_size = 256
+        mini_size = 8
     )
 
     if mode == "train":
@@ -127,7 +127,7 @@ def train(model):
         mAP = evaluate( # Mean Average Precision
                 model=model,
                 eval_data=eval_data,
-                num_samples=50,
+                num_samples=10,
                 plot=False,
                 print_AP=False
         ) 
@@ -209,7 +209,7 @@ if __name__ == '__main__':
             (1, None, 4)            # gt_box_corners_map: (1, num_gt_boxes, 4)
         ]
     )
-    optimizer = Adam(learning_rate = options.learning_rate, beta_1 = 0.9, beta_2 = 0.999)
+    optimizer = SGD(learning_rate = options.learning_rate, momentum = 0.9)
     model.compile(optimizer = optimizer)
     
     if options.load_from:

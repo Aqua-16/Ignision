@@ -2,6 +2,7 @@ import numpy as np
 import os
 from pathlib import Path
 import random
+random.seed(42)
 import xml.etree.ElementTree as ET
 from typing import List
 from typing import Tuple
@@ -67,11 +68,11 @@ class Dataset:
     if filepath in sample_by_filepath:
       sample = sample_by_filepath[filepath]
     else:
-      sample = self.generate_training_sample(filepath = filepath, flip = flip)
-    print(sample)
+      sample = self._generate_training_sample(filepath = filepath, flip = flip)
+    sample_by_filepath[filepath] = sample
     return sample
 
-  def generate_training_sample(self, filepath, flip):
+  def _generate_training_sample(self, filepath, flip):
     scaled_image_data, scaled_image, original_shape = image.load_image(path = filepath, flip = flip)
     _, original_height, original_width = original_shape # depth is dicarded
 
