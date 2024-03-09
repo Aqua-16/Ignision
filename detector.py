@@ -81,11 +81,11 @@ class DN(tf.keras.Model):
     @staticmethod
     def class_loss(y_pred, y_true, f_logits):
         scale_factor = 1.0
-        N = tf.cast(tf.shape(y_true)[1], dtype = tf.float32) + tf.constant(1e-3)# N=number of proposals  #1e-3 added to avoid division by zero
+        N = tf.cast(tf.shape(y_true)[1], dtype = tf.float32) + K.epsilon()# N=number of proposals  #1e-3 added to avoid division by zero
         if f_logits:
             return scale_factor * K.sum(K.categorical_crossentropy(target = y_true, output = y_pred, from_logits = True)) / N
         else:
-            return scale_factor *K.sum(K.categorical_crossentropy(y_true, y_pred)) / N
+            return scale_factor * K.sum(K.categorical_crossentropy(y_true, y_pred)) / N
 
     @staticmethod
     def regression_loss(y_pred, y_true):
@@ -104,4 +104,4 @@ class DN(tf.keras.Model):
 
         N = tf.cast(tf.shape(y_true)[1], dtype = tf.float32) +  K.epsilon() 
         relevant_loss_terms = y_mask * losses
-        return scale_factor * tf.reduce_sum(relevant_loss_terms) / N #scaled by the scale_factor and divided by N
+        return scale_factor * K.sum(relevant_loss_terms) / N 
