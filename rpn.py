@@ -2,6 +2,7 @@ import tensorflow as tf
 import tensorflow.keras
 from tensorflow.keras import models
 from tensorflow.keras.layers import Conv2D
+from tensorflow.keras import backend as K
 
 from . import utils
 
@@ -97,9 +98,8 @@ class RPN(tf.keras.Model):
         y_true = tf.reshape(gt_rpn_map[:,:,:,:,1], shape = tf.shape(y_pred))
         y_mask = tf.reshape(gt_rpn_map[:,:,:,:,0], shape = tf.shape(y_pred))
 
-        n_cls = tf.cast(tf.math.count_nonzero(y_mask), dtype = tf.float32) + tf.constant(1e-3)
-        loss_anchors = tf.keras.losses.binary_crossentropy(y_true, y_pred)
-
+        n_cls = tf.cast(tf.math.count_nonzero(y_mask), dtype = tf.float32) + K.epsilon()
+        loss_anchors = K.binary_crossentropy(y_true, y_pred)
         valid_loss = y_mask * loss_anchors
         return tf.reduce_sum(valid_loss)/n_cls
 
