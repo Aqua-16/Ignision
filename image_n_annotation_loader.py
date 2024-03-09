@@ -14,7 +14,7 @@ class Dataset:
   
   num_classes = 2
   class_index_to_name = {0:"background",1:"fire"}
-  def __init__(self, direc = "dataset", _feature_pixels = 16, augmenting = True, shuffling = True):#if dataset is in any other folder directly change the directory from here
+  def __init__(self, direc = "Ignision\dataset", _feature_pixels = 16, augmenting = True, shuffling = True):#if dataset is in any other folder directly change the directory from here
     '''
       direc: directory of dataset
       feature_pixels: size of each cell in img pixels  faster rcnn feature map
