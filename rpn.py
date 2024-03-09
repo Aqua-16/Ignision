@@ -108,7 +108,6 @@ class RPN(tf.keras.Model):
 
         sigma = 9.0
         y_true = tf.reshape(gt_rpn_map[:,:,:,:,2:6], shape = tf.shape(y_pred))
-
         y_included = tf.reshape(gt_rpn_map[:,:,:,:,0], shape = tf.shape(gt_rpn_map)[0:4]) 
         y_positive = tf.reshape(gt_rpn_map[:,:,:,:,1], shape = tf.shape(gt_rpn_map)[0:4])
         y_mask = y_included * y_positive
@@ -116,11 +115,11 @@ class RPN(tf.keras.Model):
 
         n_cls = tf.cast(tf.math.count_nonzero(y_included), dtype = tf.float32) + K.epsilon() # Using y_included to check for all anchors (This is similar to our class loss)
 
-        x = tf.math.abs(y_true - y_pred)
-        is_small = tf.stop_gradient(tf.cast(tf.less(x,1.0/sigma), dtype = tf.float32))
+        x = y_true - y_pred
+        x_abs = tf.math.abs(x)
+        is_small = tf.stop_gradient(tf.cast(tf.less(x_abs,1.0/sigma), dtype = tf.float32))
         R_small_loss = 0.5 * sigma * x * x
-        R_large_loss = x - 0.5/sigma
+        R_large_loss = x_abs - 0.5/sigma
         loss_anchors = is_small * R_small_loss + (1-is_small) * R_large_loss
-
         valid_loss = y_mask * loss_anchors
         return K.sum(valid_loss)/n_cls
