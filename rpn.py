@@ -94,8 +94,8 @@ class RPN(tf.keras.Model):
     
     @staticmethod
     def cls_loss(y_pred, gt_rpn_map):
-        y_true = tf.reshape(gt_rpn_map[:,:,:,1], shape = tf.shape(y_pred))
-        y_mask = tf.reshape(gt_rpn_map[:,:,:,0], shape = tf.shape(y_pred))
+        y_true = tf.reshape(gt_rpn_map[:,:,:,:,1], shape = tf.shape(y_pred))
+        y_mask = tf.reshape(gt_rpn_map[:,:,:,:,0], shape = tf.shape(y_pred))
 
         n_cls = tf.cast(tf.math.count_nonzero(y_mask), dtype = tf.float32) + tf.constant(1e-3)
         loss_anchors = tf.keras.loss.binary_crossentropy(y_true, y_pred)
@@ -107,10 +107,10 @@ class RPN(tf.keras.Model):
     def reg_loss(y_pred, gt_rpn_map):
 
         sigma = 9.0
-        y_true = tf.reshape(gt_rpn_map[:,:,:,2:6], shape = tf.shape(y_pred))
+        y_true = tf.reshape(gt_rpn_map[:,:,:,:,2:6], shape = tf.shape(y_pred))
 
-        y_included = tf.reshape(gt_rpn_map[:,:,:,0], shape = tf.shape(gt_rpn_map)[0:4]) 
-        y_positive = tf.reshape(gt_rpn_map[:,:,:,1], shape = tf.shape(gt_rpn_map)[0:4])
+        y_included = tf.reshape(gt_rpn_map[:,:,:,:,0], shape = tf.shape(gt_rpn_map)[0:4]) 
+        y_positive = tf.reshape(gt_rpn_map[:,:,:,:,1], shape = tf.shape(gt_rpn_map)[0:4])
         y_mask = y_included * y_positive
         y_mask = tf.repeat(y_mask, repeats = 4, axis = -1)
 
