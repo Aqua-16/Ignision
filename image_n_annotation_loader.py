@@ -61,7 +61,7 @@ class Dataset:
     if flip:
       sample_by_filepath = self.augmented_cached_sample_by_filepath  
     else:
-      self.unaugmented_cached_sample_by_filepath
+      sample_by_filepath=self.unaugmented_cached_sample_by_filepath
   
     # Load and, if caching, write back to cache
     if filepath in sample_by_filepath:
