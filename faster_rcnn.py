@@ -3,10 +3,10 @@ import tensorflow as tf
 import tensorflow.keras
 from tensorflow.keras import Model
 
-import vgg16
-import utils
-import rpn
-import detector
+from . import vgg16
+from . import utils
+from . import rpn
+from . import detector
 
 class FasterRCNN(tf.keras.Model):
     def __init__(self, num_classes, actclassoutputs, l2 = 0,dropout_prob=0):
@@ -41,7 +41,7 @@ class FasterRCNN(tf.keras.Model):
         feature_map = self._level1_feature_extractor(input_image = input_image)
 
         # At second level, use region proposal network to find noteworthy regions
-        rpn_scores, rpn_box_deltas, rpn_proposals = self._level2_rpn(
+        rpn_scores, rpn_box_deltas, proposals = self._level2_rpn(
             inputs = [
                 input_image,
                 feature_map,
@@ -51,14 +51,14 @@ class FasterRCNN(tf.keras.Model):
         )
         if training:
             proposals, gt_classes, gt_box_deltas = self.label_proposals(
-                proposals = rpn_proposals,
+                proposals = proposals,
                 gt_box_class_idxs = gt_box_class_idx_map[0],
                 gt_box_corners = gt_box_corner_map[0],
                 min_background_iou_threshold = 0.0,
                 min_object_iou_threshold = 0.5
             )
             proposals, gt_classes, gt_box_deltas = self.sample_proposals(
-                proposals = rpn_proposals,
+                proposals = proposals,
                 gt_classes = gt_classes,
                 gt_box_deltas = gt_box_deltas,
                 max_proposals = 128,
@@ -70,7 +70,9 @@ class FasterRCNN(tf.keras.Model):
             gt_classes = tf.stop_gradient(gt_classes)
             gt_box_deltas = tf.stop_gradient(gt_box_deltas)
             
-
+        print(proposals.shape)
+        print(input_image.shape)
+        print(feature_map.shape)
         # At third level, use detector
         d_classes,d_box_deltas=self._level3_detector_network(
             inputs=[

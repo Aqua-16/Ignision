@@ -1,7 +1,7 @@
 from collections import defaultdict
 import numpy as np
 
-from utils import iou
+from .utils import iou
 import matplotlib.pyplot as plt
 
 

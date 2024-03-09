@@ -1,5 +1,5 @@
 import numpy as np
-import utils
+from . import utils
 
 def generate_anchor_map(image_shape,feature_scale):
     assert len(image_shape) == 3

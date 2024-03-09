@@ -3,7 +3,7 @@ import tensorflow.keras
 from tensorflow.keras import models
 from tensorflow.keras.layers import Conv2D
 
-import utils
+from . import utils
 
 class RPN(tf.keras.Model):
     def __init__(self,max_proposals_pre_nms_train, max_proposals_post_nms_train, max_proposals_pre_nms_pred, max_proposals_post_nms_pred, l2 = 0):
@@ -38,33 +38,32 @@ class RPN(tf.keras.Model):
         scores = self.rpn_cls(y)
         bbox_regressions = self.rpn_reg(y)
 
-        # Assuming that anchor_map has shape of (h*w*num,4) 
-        # TODO: Make sure this is true
-        row = tf.shape(anchor_map)[0]
-        anchors = tf.reshape(anchor_map, shape = (row,4))
-        objectness_scores = tf.reshape(scores, shape = (row,1))
-        box_deltas = tf.reshape(bbox_regressions, shape = (row,4))
-
+        anchors, objectness_scores, box_deltas = self._extract(
+            anchor_map = anchor_map,
+            objectness_score_map = scores,
+            box_delta_map = bbox_regressions
+        )
+        
         proposals = utils.deltas_to_bboxes(
             deltas = box_deltas,
             anchors = anchors,
             means = [0.0,0.0,0.0,0.0],
             stds = [1.0,1.0,1.0,1.0]
         )
-
         # Selecting the K best proposals
         sorted_indices = tf.argsort(objectness_scores)
         sorted_indices = sorted_indices[::-1]
-        proposals = tf.gather(proposals, indices = sorted_indices)[:max_proposals_pre_nms]
-        objectness_scores = tf.gather(objectness_scores, indices = sorted_indices)[:max_proposals_pre_nms]
-
+        print(sorted_indices)
+        proposals = tf.gather(proposals, indices = sorted_indices)[0:max_proposals_pre_nms]
+        objectness_scores = tf.gather(objectness_scores, indices = sorted_indices)[0:max_proposals_pre_nms]
+        print(proposals.shape)
         # Clipping values within image boundaries
         h = tf.cast(tf.shape(image)[1], dtype = tf.float32)
         w = tf.cast(tf.shape(image)[2], dtype = tf.float32)
         prop_top_left = tf.maximum(proposals[:,0:2], 0.0)
-        prop_y2 = tf.reshape(tf.minimum(proposals[:,2],h), shape = (-1,1))
-        prop_x2 = tf.reshape(tf.minimum(proposals[:,3],w), shape = (-1,1))
-        proposals = tf.concat([prop_top_left, prop_y2, prop_x2], axis = -1)
+        prop_y2 = tf.reshape(tf.minimum(proposals[:,2], h), shape = (-1, 1))
+        prop_x2 = tf.reshape(tf.minimum(proposals[:,3], w), shape = (-1, 1))
+        proposals = tf.concat([prop_top_left, prop_y2, prop_x2], axis = 1)
         
         # Removing proposals with size lesser than the predefine feature scale of 16
         height = proposals[:,2] - proposals[:,0]
@@ -84,6 +83,17 @@ class RPN(tf.keras.Model):
         proposals = tf.gather(proposals, indices = indices)
         return [ scores, box_deltas, proposals ]
 
+    def _extract(self, anchor_map, objectness_score_map, box_delta_map):
+        height = tf.shape(anchor_map)[1]
+        width = tf.shape(anchor_map)[2]
+        num_anchors = tf.shape(anchor_map)[3]
+      
+        anchors = tf.reshape(anchor_map, shape = (height * width * num_anchors, 4))           
+        scores = tf.reshape(objectness_score_map, shape = (height * width * num_anchors, 1))  
+        box_deltas = tf.reshape(box_delta_map, shape = (height * width * num_anchors, 4))                                        
+        scores = tf.squeeze(scores)
+        return anchors, scores, box_deltas
+    
     @staticmethod
     def cls_loss(y_pred, gt_rpn_map):
         y_true = tf.reshape(gt_rpn_map[:,:,:,1], shape = tf.shape(y_pred))

@@ -7,7 +7,7 @@ from tensorflow.keras.layers import Flatten
 from tensorflow.keras.layers import Lambda
 from tensorflow.keras.layers import TimeDistributed
 
-import roi_pooling
+from . import roi_pooling
 
 class DN(tf.keras.Model):
     def __init__(self, n_of_classes, actclassoutputs, l2, dropout_prob):
@@ -16,6 +16,7 @@ class DN(tf.keras.Model):
         self._num_classes = n_of_classes
         self._activate_class_outputs = actclassoutputs
         self._dropout_probability = dropout_prob
+        self._roi_pool = False
         regularizer = tf.keras.regularizers.l2(l2)
         class_initializer = tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.01)
         regressor_initializer = tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.001)

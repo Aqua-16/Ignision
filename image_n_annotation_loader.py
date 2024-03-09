@@ -5,9 +5,9 @@ import random
 import xml.etree.ElementTree as ET
 from typing import List
 from typing import Tuple
-from datacls import Box,TrainingSample
-import image
-import anchors
+from .datacls import Box,TrainingSample
+from . import image
+from . import anchors
 
 
 class Dataset:
