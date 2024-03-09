@@ -54,8 +54,8 @@ class FasterRCNN(tf.keras.Model):
                 proposals = proposals,
                 gt_box_class_idxs = gt_box_class_idx_map[0],
                 gt_box_corners = gt_box_corner_map[0],
-                min_background_iou_threshold = 0.0,
-                min_object_iou_threshold = 0.5
+                min_bg_iou_threshold = 0.0,
+                min_obj_iou_threshold = 0.5
             )
             proposals, gt_classes, gt_box_deltas = self.sample_proposals(
                 proposals = proposals,
