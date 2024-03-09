@@ -80,7 +80,7 @@ class RPN(tf.keras.Model):
         )
 
         proposals = tf.gather(proposals, indices = indices)
-        return [ scores, box_deltas, proposals ]
+        return [ scores, bbox_regressions, proposals ]
 
     def _extract(self, anchor_map, objectness_score_map, box_delta_map):
         height = tf.shape(anchor_map)[1]
