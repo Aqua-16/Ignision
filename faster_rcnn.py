@@ -70,16 +70,14 @@ class FasterRCNN(tf.keras.Model):
             gt_classes = tf.stop_gradient(gt_classes)
             gt_box_deltas = tf.stop_gradient(gt_box_deltas)
             
-        print(proposals.shape)
-        print(input_image.shape)
-        print(feature_map.shape)
         # At third level, use detector
         d_classes,d_box_deltas=self._level3_detector_network(
-            inputs=[
+            inp=[
                 input_image,
                 feature_map,
                 proposals
-            ],training=training
+            ],
+            train=training
         )       
 
         #Losses

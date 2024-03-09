@@ -6,6 +6,10 @@ from tqdm import tqdm
 from tensorflow.keras.optimizers import Adam
 import tensorflow as tf
 
+import warnings
+warnings.filterwarnings("ignore")
+
+
 from .stats import train_statistics, PRCCalc
 from . import image_n_annotation_loader as dataset
 from . import vgg16

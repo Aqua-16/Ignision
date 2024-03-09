@@ -53,10 +53,8 @@ class RPN(tf.keras.Model):
         # Selecting the K best proposals
         sorted_indices = tf.argsort(objectness_scores)
         sorted_indices = sorted_indices[::-1]
-        print(sorted_indices)
         proposals = tf.gather(proposals, indices = sorted_indices)[0:max_proposals_pre_nms]
         objectness_scores = tf.gather(objectness_scores, indices = sorted_indices)[0:max_proposals_pre_nms]
-        print(proposals.shape)
         # Clipping values within image boundaries
         h = tf.cast(tf.shape(image)[1], dtype = tf.float32)
         w = tf.cast(tf.shape(image)[2], dtype = tf.float32)
