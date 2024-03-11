@@ -1,7 +1,7 @@
 from collections import defaultdict
 import numpy as np
 
-from .utils import iou
+from .utils import iou_numpy
 import matplotlib.pyplot as plt
 
 
@@ -56,7 +56,7 @@ class PRCCalc:
                 for box_index in range(len(scored_boxes)):
                     boxes1 = np.expand_dims(scored_boxes[box_index][0:4], axis = 0)
                     boxes2 = np.expand_dims(gt_boxes_of_curr_class[gt_index].corners, axis = 0)
-                    iou=iou(boxes1 = boxes1, boxes2 = boxes2)
+                    iou=iou_numpy(boxes1 = boxes1, boxes2 = boxes2)
                     ious.append((iou, box_index, gt_index))
             ious = sorted(ious, key = lambda iou: ious[0], reverse = True)#sort in descending order
 

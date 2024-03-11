@@ -1,4 +1,16 @@
 import tensorflow as tf
+import numpy as np
+def iou_numpy(boxes1, boxes2):
+ 
+  top_left_point = np.maximum(boxes1[:,None,0:2], boxes2[:,0:2])                                  
+  bottom_right_point = np.minimum(boxes1[:,None,2:4], boxes2[:,2:4])                             
+  well_ordered_mask = np.all(top_left_point < bottom_right_point, axis = 2)                    
+  intersection_areas = well_ordered_mask * np.prod(bottom_right_point - top_left_point, axis = 2) 
+  areas1 = np.prod(boxes1[:,2:4] - boxes1[:,0:2], axis = 1)                                      
+  areas2 = np.prod(boxes2[:,2:4] - boxes2[:,0:2], axis = 1)                                      
+  union_areas = areas1[:,None] + areas2 - intersection_areas                                  
+  epsilon = 1e-7
+  return intersection_areas / (union_areas + epsilon)
 
 def iou(bbox1,bbox2):
     # These create tensors that will help compute the iou of each box in bbox1 with each box in bbox2
@@ -6,8 +18,8 @@ def iou(bbox1,bbox2):
     boxes2 = tf.tile(bbox2,[tf.shape(bbox1)[0],1])
 
     # Extracting box coordinates of each pair of boxes
-    b1_y1,b1_x1,b1_y2,b1_x2 = [tf.cast(tensor, tf.float32) for tensor in tf.split(boxes1, 4, axis = 1)]
-    b2_y1,b2_x1,b2_y2,b2_x2 = [tf.cast(tensor, tf.float32) for tensor in tf.split(boxes2, 4, axis = 1)]
+    b1_y1,b1_x1,b1_y2,b1_x2 = tf.split(boxes1, 4, axis = 1)
+    b2_y1,b2_x1,b2_y2,b2_x2 = tf.split(boxes1, 4, axis = 1)
 
     # Calculating intersection area
     y1 = tf.maximum(b1_y1,b2_y1)

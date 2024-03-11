@@ -1,3 +1,5 @@
+# DONE
+
 import numpy as np
 from . import utils
 
@@ -60,7 +62,7 @@ def generate_rpn_map(anchor_map, gt_boxes, object_threshold = 0.7, background_th
     object_score = np.full(n,-1)
     gt_box_assignment = np.full(n,-1)
 
-    ious = utils.iou(anchors,gt_box_corners).numpy()
+    ious = utils.iou_numpy(anchors,gt_box_corners)
 
     max_iou_anchor = np.max(ious,axis = 1) # Best iou for each anchor
     highest_gt_box_idx = np.argmax(ious,axis = 1) # Best ground truth box for each anchor
@@ -81,7 +83,7 @@ def generate_rpn_map(anchor_map, gt_boxes, object_threshold = 0.7, background_th
     box_deltas[:,0:2] = (gt_box_centers[gt_box_assignment] - anchor_map[:,0:2])/anchor_map[:,2:4]
     box_deltas[:,2:4] = np.log(gt_box_lengths[gt_box_assignment]/anchor_map[:,2:4])
 
-    rpn_map = np.empty((h,w,num_anchors,6))
+    rpn_map = np.zeros((h,w,num_anchors,6))
     rpn_map[:,:,:,0] = mask.reshape((h,w,num_anchors))
     rpn_map[:,:,:,1] = object_score.reshape((h,w,num_anchors))
     rpn_map[:,:,:,2:6] = box_deltas.reshape((h,w,num_anchors,4))

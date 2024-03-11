@@ -1,3 +1,5 @@
+# Isolated
+
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras

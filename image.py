@@ -1,3 +1,5 @@
+# DONE
+
 import cv2
 import numpy as np
 
@@ -18,8 +20,9 @@ def preprocess_vgg16(image_data):
     
 def load_image(path,flip=None):
     image = cv2.imread(path)
-    h = image.shape[0]
-    w = image.shape[1]
+    h = max(image.shape[0],640)
+    w = max(image.shape[1],480)
+    image = cv2.resize(image,(w,h))
     if flip:
         cv2.flip(image,1)
     image_HSV = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
