@@ -16,7 +16,7 @@ from . import vgg16
 from . import faster_rcnn
 from . import utils
 from . import anchors
-from . import image
+from . import image as img
 
 def _get_sample_rpn_minibatch(rpn_map,object_indices,background_indices,mini_size):
     # This selects a subset of anchors for training and returns a copy of the ground truth RPN map with only those anchors marked for training
@@ -127,7 +127,7 @@ def train(model):
         mAP = evaluate( # Mean Average Precision
                 model=model,
                 eval_data=eval_data,
-                num_samples=10,
+                num_samples=10,#number of samples to use for eval after each iter
                 plot=False,
                 print_AP=False
         ) 
@@ -153,13 +153,13 @@ def train(model):
     )
 
 def _predict(model,url,output_path):
-    image_data, image, _ = image.load_image(path = url)
+    image_data, image, _ = img.load_image(path = url)
     anchor_map = anchors.generate_anchor_map(image_shape = image_data.shape, feature_scale = 16)
     anchor_map = np.expand_dims(anchor_map,axis = 0)
     image_data = np.expand_dims(image_data,axis = 0) # Converting to Batch size of 1
     x = [ image_data, anchor_map ]
     scored_bboxes = model.predict_on_batch(x = x, threshold = 0.7)
-    image.show_detections(
+    img.show_detections(
         out_path = output_path,
         image = image,
         scored_boxes_class_idx = scored_bboxes,
