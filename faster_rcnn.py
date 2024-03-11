@@ -14,7 +14,7 @@ class FasterRCNN(tf.keras.Model):
         
         self._num_classes = num_classes
         self._outputs_convert_to_probability = actclassoutputs
-        self._level1_feature_extractor = vgg16.BackBone(l2)
+        self._level1_feature_extractor = vgg16.BackBone(l2=l2)
         self._level2_rpn = rpn.RPN(
         max_proposals_pre_nms_train = 12000,
         max_proposals_post_nms_train = 2000,
@@ -131,7 +131,7 @@ class FasterRCNN(tf.keras.Model):
                 
     def predict_on_batch(self,x,threshold):
         _,_,detector_cls,detector_box_deltas,proposals,_,_,_,_ = super().predict_on_batch(x=x)
-        scored_bboxes = self.predictions_to_scored_bboxes(self,
+        scored_bboxes = self.predictions_to_scored_bboxes(
                                                         input_image = x[0], 
                                                         classes = detector_cls, 
                                                         box_deltas = detector_box_deltas, 
