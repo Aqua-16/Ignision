@@ -83,6 +83,7 @@ def evaluate(model,eval_data=None,num_samples = None, plot=False,print_AP=False)
     i=0
     #print(f"Evaluating {eval_data.split} ...")
     for sample in tqdm(iterable=iter(eval_data), total=num_samples):
+        print(sample.filepath)
         x, _ , _ = _convert_sample_to_model_input(sample = sample, mode = "infer")
         scored_boxes_by_class_index = model.predict_on_batch(x = x, threshold = 0.1)# lower threshold score for evaluation
         prc.add_img_result(
@@ -116,7 +117,7 @@ def train(model):
     if options.save_best_to:
         best_weights_tracker = utils.BestWeightsTracker(filepath = options.save_best_to)
 
-    for epoch in (1,1+options.epochs):
+    for epoch in range(1,1+options.epochs):
         print(f"Epoch       {epoch}/{options.epochs}")
         stats = train_statistics()
         progbar = tqdm(iterable = iter(training_data), total = training_data.num_samples, postfix = stats.progress_bar_postfix())

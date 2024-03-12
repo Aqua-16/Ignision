@@ -6,11 +6,11 @@ import numpy as np
 LOW_VAL = 150
 HIGH_VAL = 255
 
-LOW_SAT = 25
+LOW_SAT = 0
 HIGH_SAT = 255
 
 LOW_HUE = 0
-HIGH_HUE = 80
+HIGH_HUE = 60
 
 
 def preprocess_vgg16(image_data):
