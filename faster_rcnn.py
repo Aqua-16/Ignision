@@ -14,7 +14,7 @@ class FasterRCNN(tf.keras.Model):
         
         self._num_classes = num_classes
         self._outputs_convert_to_probability = actclassoutputs
-        self._level1_feature_extractor = vgg16.BackBone(l2)
+        self._level1_feature_extractor = vgg16.BackBone(l2=l2)
         self._level2_rpn = rpn.RPN(
         max_proposals_pre_nms_train = 12000,
         max_proposals_post_nms_train = 2000,
