@@ -184,7 +184,7 @@ if __name__ == '__main__':
     parser.add_argument("--plot", action = "store_true", help = "Plots the average precision after evaluation (use with --train or --eval)")
     parser.add_argument("--epochs", metavar = "count", type = int, action = "store", default = 1, help = "Number of epochs to train for")
     parser.add_argument("--learning-rate", metavar = "value", type = float, action = "store", default = 1e-3, help = "Learning rate")
-    parser.add_argument("--logits", action = "store_true", help = "Do not apply softmax to detector class output and compute loss from logits directly")
+    parser.add_argument("--logits", action = "store_true", help = "Do not apply sigmoid to detector class output and compute loss from logits directly")
     parser.add_argument("--weight-decay", metavar = "value", type = float, action = "store", default = 5e-4, help = "Weight decay")
     parser.add_argument("--dropout", metavar = "probability", type = float, action = "store", default = 0.0, help = "Dropout probability after each of the two fully-connected detector layers")
     options = parser.parse_args()

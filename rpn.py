@@ -22,7 +22,7 @@ class RPN(tf.keras.Model):
         anchor_num = 9
     
         self.rpn_conv_1 = Conv2D(name = "rpn_conv_layer_1", kernel_size = (3,3), strides = 1, padding = "same", filters = 512, kernel_regularizer = regularizer, kernel_initializer = initial_weights, activation = "relu")
-        self.rpn_cls = Conv2D(name = "rpn_cls", kernel_size = (1,1), strides = 1, padding = "same", filters = anchor_num, kernel_initializer = initial_weights, activation = "softmax")
+        self.rpn_cls = Conv2D(name = "rpn_cls", kernel_size = (1,1), strides = 1, padding = "same", filters = anchor_num, kernel_initializer = initial_weights, activation = "sigmoid")
         self.rpn_reg = Conv2D(name = "rpn_reg", kernel_size = (1,1), strides = 1, padding = "same", filters = 4*anchor_num, kernel_initializer = initial_weights, activation = "linear")
 
     def __call__(self, inputs, training):

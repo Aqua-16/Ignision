@@ -151,7 +151,7 @@ class FasterRCNN(tf.keras.Model):
         box_deltas = np.squeeze(box_deltas, axis = 0)
 
         if self._outputs_convert_to_probability:
-            classes = tf.nn.softmax(classes,axis = 1).numpy()
+            classes = tf.nn.sigmoid(classes,axis = 1).numpy()
 
         prop_anchors = np.empty(proposals.shape)
         prop_anchors[:,0] = 0.5 * (proposals[:,2] + proposals[:,0]) # Center - y

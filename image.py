@@ -31,9 +31,6 @@ def load_image(path,flip=None):
     image = cv2.resize(image,(w,h))
     if flip:
         cv2.flip(image,1)
-    image_HSV = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    mask = cv2.inRange(image_HSV, (LOW_HUE, LOW_SAT, LOW_VAL), (HIGH_HUE, HIGH_SAT, HIGH_VAL))
-    image = cv2.bitwise_and(image, image, mask=mask)
     image_data = image.astype(np.float32)
     image_data = preprocess_vgg16(image_data)
     return image_data,image,scale_factor,(image_data.shape[0],h,w)
