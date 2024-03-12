@@ -131,7 +131,7 @@ class FasterRCNN(tf.keras.Model):
                 
     def predict_on_batch(self,x,threshold):
         _,_,detector_cls,detector_box_deltas,proposals,_,_,_,_ = super().predict_on_batch(x=x)
-        scored_bboxes = self.predictions_to_scored_bboxes(self,
+        scored_bboxes = self.predictions_to_scored_bboxes(
                                                         input_image = x[0], 
                                                         classes = detector_cls, 
                                                         box_deltas = detector_box_deltas, 

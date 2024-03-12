@@ -1,3 +1,5 @@
+# DONE
+
 import tensorflow as tf
 import tensorflow.keras
 from tensorflow.keras import models
@@ -101,7 +103,7 @@ class RPN(tf.keras.Model):
         n_cls = tf.cast(tf.math.count_nonzero(y_mask), dtype = tf.float32) + K.epsilon()
         loss_anchors = K.binary_crossentropy(y_true, y_pred)
         valid_loss = y_mask * loss_anchors
-        return tf.reduce_sum(valid_loss)/n_cls
+        return K.sum(valid_loss)/n_cls
 
     @staticmethod
     def reg_loss(y_pred, gt_rpn_map):
@@ -122,4 +124,4 @@ class RPN(tf.keras.Model):
         R_large_loss = x_abs - 0.5/sigma
         loss_anchors = is_small * R_small_loss + (1-is_small) * R_large_loss
         valid_loss = y_mask * loss_anchors
-        return K.sum(valid_loss)/n_cls
+        return 1.0 * K.sum(valid_loss)/n_cls

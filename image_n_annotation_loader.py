@@ -1,3 +1,5 @@
+# Done
+
 import numpy as np
 import os
 from pathlib import Path
@@ -92,7 +94,7 @@ class Dataset:
       scaled_box = Box(
         class_index = box.class_index,
         class_name = box.class_name,
-        corners = corners
+        corners = corners * 1.0
       )
       scaled_gt_boxes.append(scaled_box)
 
@@ -112,13 +114,13 @@ class Dataset:
     )
 
   def file_paths(self):
-    image_paths = [os.path.join(self.direc, "Datacluster Fire and Smoke Sample", f"Datacluster Fire and Smoke Sample ({i}).jpg") for i in range(1, 101)]
+    image_paths = [os.path.join(self.direc, "Datacluster Fire and Smoke Sample", f"Datacluster Fire and Smoke Sample ({i}).jpg") for i in range(1, 101) if (i != 79)]
     return image_paths
 
 
   def get_gt_boxes(self):
     gt_boxes_by_filepath = {}
-    annot_paths = [os.path.join(self.direc, "Annotations", f"Datacluster Fire and Smoke Sample ({i}).xml") for i in range(1, 101)]
+    annot_paths = [os.path.join(self.direc, "Annotations", f"Datacluster Fire and Smoke Sample ({i}).xml") for i in range(1, 101) if (i != 79)]
     for annot_path in annot_paths:
       tree = ET.parse(annot_path)# Parses the XML annotation file using the ElementTree library
       root = tree.getroot()
@@ -134,10 +136,10 @@ class Dataset:
         assert len(bndbox.findall("ymin")) == 1
         assert len(bndbox.findall("xmax")) == 1
         assert len(bndbox.findall("ymax")) == 1
-        x_min = bndbox.find("xmin").text
-        y_min = bndbox.find("ymin").text
-        x_max = bndbox.find("xmax").text
-        y_max = bndbox.find("ymax").text
+        x_min = round(float(bndbox.find("xmin").text)) - 1
+        y_min = round(float(bndbox.find("ymin").text)) - 1
+        x_max = round(float(bndbox.find("xmax").text)) - 1
+        y_max = round(float(bndbox.find("ymax").text)) - 1
         corners = np.array([ y_min, x_min, y_max, x_max ]).astype(np.float32)
         box = Box(class_index = self.class_name_to_index[class_name], class_name = class_name, corners = corners)
         boxes.append(box)

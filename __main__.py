@@ -16,7 +16,7 @@ from . import vgg16
 from . import faster_rcnn
 from . import utils
 from . import anchors
-from . import image
+from . import image as vis
 
 def _get_sample_rpn_minibatch(rpn_map,object_indices,background_indices,mini_size):
     # This selects a subset of anchors for training and returns a copy of the ground truth RPN map with only those anchors marked for training
@@ -36,6 +36,7 @@ def _get_sample_rpn_minibatch(rpn_map,object_indices,background_indices,mini_siz
     num_pos_samples = min(mini_size//2, num_pos) # At least half of the minibatch should comprise of positive samples
     num_neg_samples = mini_size - num_pos_samples
     pos_indices = random.sample(range(num_pos), num_pos_samples)
+    assert num_neg > num_neg_samples, f"{num_neg} is smaller than {num_neg_samples}."
     neg_indices = random.sample(range(num_neg), num_neg_samples)
 
     positive_anchors = positive_anchors[pos_indices]
@@ -62,7 +63,7 @@ def _convert_sample_to_model_input(sample,mode):
     gt_rpn_map = np.expand_dims(sample.gt_rpn_map, axis = 0)
     gt_rpn_object_indices = [ sample.gt_rpn_object_indices ]
     gt_rpn_background_indices = [ sample.gt_rpn_background_indices ]
-
+    print(gt_rpn_background_indices)
     gt_rpn_minibatch =  _get_sample_rpn_minibatch(
         rpn_map = gt_rpn_map,
         object_indices = gt_rpn_object_indices,
@@ -107,7 +108,7 @@ def train(model):
     print(f"Weight decay              : {options.weight_decay}")
     print(f"Dropout                   : {options.dropout}")
 
-    training_data = dataset.Dataset()
+    training_data = dataset.Dataset(shuffling = False)
     eval_data = dataset.Dataset(augmenting = False, shuffling = False)
 
     if options.checkpoint_dir and not os.path.exists(options.checkpoint_dir):
@@ -120,6 +121,7 @@ def train(model):
         stats = train_statistics()
         progbar = tqdm(iterable = iter(training_data), total = training_data.num_samples, postfix = stats.progress_bar_postfix())
         for sample in progbar:
+            print(sample)
             x, _, gt_rpn_minibatch = _convert_sample_to_model_input(sample = sample, mode = "train")
             losses = model.train_on_batch(x = x, y = gt_rpn_minibatch, return_dict = True)
             stats.during_training_step(losses = losses)
@@ -153,13 +155,13 @@ def train(model):
     )
 
 def _predict(model,url,output_path):
-    image_data, image, _ = image.load_image(path = url)
+    image_data, image, _ = vis.load_image(path = url)
     anchor_map = anchors.generate_anchor_map(image_shape = image_data.shape, feature_scale = 16)
     anchor_map = np.expand_dims(anchor_map,axis = 0)
     image_data = np.expand_dims(image_data,axis = 0) # Converting to Batch size of 1
     x = [ image_data, anchor_map ]
     scored_bboxes = model.predict_on_batch(x = x, threshold = 0.7)
-    image.show_detections(
+    vis.show_detections(
         out_path = output_path,
         image = image,
         scored_boxes_class_idx = scored_bboxes,
