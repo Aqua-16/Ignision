@@ -63,12 +63,12 @@ def _convert_sample_to_model_input(sample,mode):
     gt_rpn_map = np.expand_dims(sample.gt_rpn_map, axis = 0)
     gt_rpn_object_indices = [ sample.gt_rpn_object_indices ]
     gt_rpn_background_indices = [ sample.gt_rpn_background_indices ]
-    print(gt_rpn_background_indices)
+    gt_rpn_background_indices
     gt_rpn_minibatch =  _get_sample_rpn_minibatch(
         rpn_map = gt_rpn_map,
         object_indices = gt_rpn_object_indices,
         background_indices = gt_rpn_background_indices,
-        mini_size = 8
+        mini_size = 256
     )
 
     if mode == "train":
@@ -81,10 +81,10 @@ def _convert_sample_to_model_input(sample,mode):
 def evaluate(model,eval_data=None,num_samples = None, plot=False,print_AP=False):
     prc=PRCCalc()
     i=0
-    print(f"Evaluating {eval_data.split} ...")
+    #print(f"Evaluating {eval_data.split} ...")
     for sample in tqdm(iterable=iter(eval_data), total=num_samples):
         x, _ , _ = _convert_sample_to_model_input(sample = sample, mode = "infer")
-        scored_boxes_by_class_index = model.predict_on_batch(x = x, score_threshold = 0.1)# lower threshold score for evaluation
+        scored_boxes_by_class_index = model.predict_on_batch(x = x, threshold = 0.1)# lower threshold score for evaluation
         prc.add_img_result(
             scored_boxes_by_class_index = scored_boxes_by_class_index,
             gt_boxes = sample.gt_boxes
@@ -121,7 +121,7 @@ def train(model):
         stats = train_statistics()
         progbar = tqdm(iterable = iter(training_data), total = training_data.num_samples, postfix = stats.progress_bar_postfix())
         for sample in progbar:
-            print(sample)
+            
             x, _, gt_rpn_minibatch = _convert_sample_to_model_input(sample = sample, mode = "train")
             losses = model.train_on_batch(x = x, y = gt_rpn_minibatch, return_dict = True)
             stats.during_training_step(losses = losses)
@@ -129,7 +129,7 @@ def train(model):
         mAP = evaluate( # Mean Average Precision
                 model=model,
                 eval_data=eval_data,
-                num_samples=10,#number of samples to use for eval after each iter
+                num_samples=99,#number of samples to use for eval after each iter
                 plot=False,
                 print_AP=False
         ) 
@@ -155,7 +155,7 @@ def train(model):
     )
 
 def _predict(model,url,output_path):
-    image_data, image, _ = img.load_image(path = url)
+    image_data, image,_, _ = img.load_image(path = url)
     anchor_map = anchors.generate_anchor_map(image_shape = image_data.shape, feature_scale = 16)
     anchor_map = np.expand_dims(anchor_map,axis = 0)
     image_data = np.expand_dims(image_data,axis = 0) # Converting to Batch size of 1

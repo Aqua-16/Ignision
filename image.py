@@ -3,25 +3,31 @@
 import cv2
 import numpy as np
 
-LOW_VAL = 180
+LOW_VAL = 150
 HIGH_VAL = 255
 
-LOW_SAT = 40
+LOW_SAT = 25
 HIGH_SAT = 255
 
 LOW_HUE = 0
-HIGH_HUE = 39
+HIGH_HUE = 80
+
 
 def preprocess_vgg16(image_data):
     image_data[:, :, 0] -= 103.939                # ImageNet B mean
-    image_data[:, :, 1] -= 116.779                # ImageNet G mean
+    image_data[:, :, 1] -= 116.779               # ImageNet G mean
     image_data[:, :, 2] -= 123.680                # ImageNet R mean 
     return image_data
     
 def load_image(path,flip=None):
     image = cv2.imread(path)
-    h = min(image.shape[0],640)
-    w = min(image.shape[1],480)
+    h=image.shape[0]
+    w=image.shape[1]
+    scale_factor=1.0
+    if(h>640):
+        scale_factor=640/h
+    h = int(h*scale_factor)
+    w = int(w*scale_factor)
     image = cv2.resize(image,(w,h))
     if flip:
         cv2.flip(image,1)
@@ -30,7 +36,7 @@ def load_image(path,flip=None):
     image = cv2.bitwise_and(image, image, mask=mask)
     image_data = image.astype(np.float32)
     image_data = preprocess_vgg16(image_data)
-    return image_data,image,(image_data.shape[0],h,w)
+    return image_data,image,scale_factor,(image_data.shape[0],h,w)
 
 def show_detections(out_path,image,scored_boxes_class_idx,class_idx_name):
     image_ = image.copy()

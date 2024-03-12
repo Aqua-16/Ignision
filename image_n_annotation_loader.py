@@ -75,7 +75,7 @@ class Dataset:
     return sample
 
   def _generate_training_sample(self, filepath, flip):
-    scaled_image_data, scaled_image, original_shape = image.load_image(path = filepath, flip = flip)
+    scaled_image_data, scaled_image, scale_factor,original_shape = image.load_image(path = filepath, flip = flip)
     _, original_height, original_width = original_shape # depth is dicarded
 
     # Scale ground truth boxes to new image size
@@ -94,7 +94,7 @@ class Dataset:
       scaled_box = Box(
         class_index = box.class_index,
         class_name = box.class_name,
-        corners = corners * 1.0
+        corners = corners * scale_factor
       )
       scaled_gt_boxes.append(scaled_box)
 
@@ -162,3 +162,4 @@ class Dataset:
       adir = os.path.join(adir, filename)
       
       return adir
+  
