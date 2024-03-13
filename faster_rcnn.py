@@ -150,8 +150,8 @@ class FasterRCNN(tf.keras.Model):
         classes = np.squeeze(classes, axis = 0)
         box_deltas = np.squeeze(box_deltas, axis = 0)
 
-        if self._outputs_convert_to_probability:
-            classes = tf.nn.sigmoid(classes,axis = 1).numpy()
+        if not self._outputs_convert_to_probability:
+            classes = tf.nn.softmax(classes,axis = 1).numpy()
 
         prop_anchors = np.empty(proposals.shape)
         prop_anchors[:,0] = 0.5 * (proposals[:,2] + proposals[:,0]) # Center - y
@@ -161,7 +161,7 @@ class FasterRCNN(tf.keras.Model):
         preds_by_idx = {}
         for class_idx in range (1,classes.shape[1]): # Skipping background class as that is not really required
             box_delta_idx = (class_idx - 1) * 4
-            box_delta_params = box_deltas[:, box_delta_idx+0 : box_delta_idx +4]
+            box_delta_params = box_deltas[:, (box_delta_idx+0) : (box_delta_idx +4)]
             proposal_boxes = utils.deltas_to_bboxes(
                 deltas = box_delta_params,
                 means = [0.0,0.0,0.0,0.0],
@@ -190,8 +190,7 @@ class FasterRCNN(tf.keras.Model):
                 iou_threshold = 0.3
             ).numpy()
             boxes = boxes[indexes]
-            scores = scores[indexes]
-            scores = np.expand_dims(scores, axis = 0) # This is done for the transpose operation performed next
+            scores = np.expand_dims(scores[indexes], axis = 0) # This is done for the transpose operation performed next
             scored_boxes = np.hstack([boxes,scores.T])
             result[class_idx] = scored_boxes
 

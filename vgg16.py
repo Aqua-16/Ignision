@@ -7,7 +7,7 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D
 from tensorflow.keras.initializers import GlorotNormal
 
 class BackBone(tf.keras.Model):
-    def __init__(self,l2):
+    def __init__(self,l2=0):
         super().__init__()
 
         initial_weights = GlorotNormal(seed = 42)

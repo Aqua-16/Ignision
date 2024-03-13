@@ -143,15 +143,10 @@ class Dataset:
         corners = np.array([ y_min, x_min, y_max, x_max ]).astype(np.float32)
         box = Box(class_index = self.class_name_to_index[class_name], class_name = class_name, corners = corners)
         boxes.append(box)
-      #assert len(boxes) > 0                                                #TODO: Check for possible errors and fix them
-        # print(f"Boxes in {annot_path}:")
-        # for box in boxes:
-        #     print(box)
+
+      assert len(boxes) > 0, f"No boxes?! File: {annot_path}"
       gt_boxes_by_filepath[annot_path] = boxes
-    # for annot_path, boxes in gt_boxes_by_filepath.items():
-    #     print(f"Boxes in {annot_path}:")
-    #     for box in boxes:
-    #         print(box)
+    
     return gt_boxes_by_filepath
   
   def filepathtoannotpath(filepath):

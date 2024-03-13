@@ -25,7 +25,7 @@ class DN(tf.keras.Model):
         self._dropout2 = TimeDistributed(Dropout(dropout_prob))#same use case as of prev dropout layer
 
         #output layer
-        class_activation = "sigmoid" if actclassoutputs else None
+        class_activation = "softmax" if actclassoutputs else None
         self._classifier = TimeDistributed(name = "classifier_class", layer = Dense(units = n_of_classes, activation = class_activation, kernel_initializer = class_initializer))
         self._regressor = TimeDistributed(name = "classifier_boxes", layer = Dense(units = 4 * (n_of_classes - 1), activation = "linear", kernel_initializer = regressor_initializer))#-1 is done to exclude the background class
 
@@ -56,7 +56,7 @@ class DN(tf.keras.Model):
             fc1 = self._fc1(flattened)
             fc2 = self._fc2(fc1)
             out = fc2 
-        class_activation = "sigmoid" if self._activate_class_outputs else None
+        class_activation = "softmax" if self._activate_class_outputs else None
         classes = self._classifier(out)
         box_deltas = self._regressor(out)
 
