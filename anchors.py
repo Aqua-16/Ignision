@@ -40,9 +40,13 @@ def generate_anchor_map(image_shape,feature_scale):
     # This step is done only to ensure that the final shape is as expected.
     anchor_map = anchor_map.reshape((h,w,num*4))
     
-    return anchor_map.astype(np.float32)
+    # valid anchors that don't cross image boundaries
+    image_height, image_width = image_shape[0:2]
+    valid = np.all((anchors[:,0:2] >= [0,0]) & (anchors[:,2:4] <= [image_height,image_width]), axis = 1)
+    valid = valid.reshape((h,w,num))
+    return anchor_map.astype(np.float32), valid.astype(np.float32)
 
-def generate_rpn_map(anchor_map, gt_boxes, object_threshold = 0.7, background_threshold = 0.3):
+def generate_rpn_map(anchor_map, valid, gt_boxes, object_threshold = 0.7, background_threshold = 0.3):
 
     h, w, num_anchors = anchor_map.shape
     num_anchors = num_anchors//4
@@ -63,7 +67,7 @@ def generate_rpn_map(anchor_map, gt_boxes, object_threshold = 0.7, background_th
     gt_box_assignment = np.full(n,-1)
 
     ious = utils.iou_numpy(anchors,gt_box_corners)
-
+    ious[valid.flatten() == 0, :] = -1.0
     max_iou_anchor = np.max(ious,axis = 1) # Best iou for each anchor
     highest_gt_box_idx = np.argmax(ious,axis = 1) # Best ground truth box for each anchor
     max_iou_gt_box = np.max(ious,axis = 0) # Best iou for each ground truth box
@@ -84,7 +88,7 @@ def generate_rpn_map(anchor_map, gt_boxes, object_threshold = 0.7, background_th
     box_deltas[:,2:4] = np.log(gt_box_lengths[gt_box_assignment]/anchor_map[:,2:4])
 
     rpn_map = np.zeros((h,w,num_anchors,6))
-    rpn_map[:,:,:,0] = mask.reshape((h,w,num_anchors))
+    rpn_map[:,:,:,0] = valid * mask.reshape((h,w,num_anchors))
     rpn_map[:,:,:,1] = object_score.reshape((h,w,num_anchors))
     rpn_map[:,:,:,2:6] = box_deltas.reshape((h,w,num_anchors,4))
 

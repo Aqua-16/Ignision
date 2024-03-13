@@ -29,7 +29,7 @@ class RPN(tf.keras.Model):
         image = inputs[0]
         feature_map = inputs[1]
         anchor_map = inputs[2]
-
+        valid = inputs[3]
         assert len(feature_map.shape) == 4  
 
         if training:

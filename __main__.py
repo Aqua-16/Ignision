@@ -60,6 +60,7 @@ def _convert_sample_to_model_input(sample,mode):
     image_data = np.expand_dims(sample.image_data, axis = 0)
     image_shape_map = np.array([ [ image_data.shape[1], image_data.shape[2], image_data.shape[3] ] ])
     anchor_map = np.expand_dims(sample.anchor_map, axis = 0)
+    valid = np.expand_dims(sample.valid, axis = 0)
     gt_rpn_map = np.expand_dims(sample.gt_rpn_map, axis = 0)
     gt_rpn_object_indices = [ sample.gt_rpn_object_indices ]
     gt_rpn_background_indices = [ sample.gt_rpn_background_indices ]
@@ -71,9 +72,9 @@ def _convert_sample_to_model_input(sample,mode):
     )
 
     if mode == "train":
-        x = [ image_data, anchor_map, gt_rpn_minibatch, gt_box_class_idxs, gt_box_corners ]
+        x = [ image_data, anchor_map, valid, gt_rpn_minibatch, gt_box_class_idxs, gt_box_corners ]
     else: # prediction
-        x = [ image_data, anchor_map ]
+        x = [ image_data, anchor_map , valid ]
 
     return x, image_data, gt_rpn_minibatch # Returned like so for convenience
 
@@ -82,7 +83,6 @@ def evaluate(model,eval_data=None,num_samples = None, plot=False,print_AP=False)
     i=0
     #print(f"Evaluating {eval_data.split} ...")
     for sample in tqdm(iterable=iter(eval_data), total=num_samples):
-        print(sample.filepath)
         x, _ , _ = _convert_sample_to_model_input(sample = sample, mode = "predict")
         scored_boxes_by_class_index = model.predict_on_batch(x = x, threshold = 0.05)# lower threshold score for evaluation
         prc.add_img_result(
@@ -156,10 +156,11 @@ def train(model):
 
 def _predict(model,url,output_path):
     image_data, image,_, _ = img.load_image(path = url)
-    anchor_map, _ = anchors.generate_anchor_map(image_shape = image_data.shape, feature_scale = 16)
+    anchor_map, valid = anchors.generate_anchor_map(image_shape = image_data.shape, feature_scale = 16)
     anchor_map = np.expand_dims(anchor_map,axis = 0)
+    valid = np.expand_dims(valid, axis = 0)
     image_data = np.expand_dims(image_data,axis = 0) # Converting to Batch size of 1
-    x = [ image_data, anchor_map ]
+    x = [ image_data, anchor_map , valid ]
     scored_bboxes = model.predict_on_batch(x = x, threshold = 0.7)
     img.show_detections(
         out_path = output_path,
@@ -206,6 +207,7 @@ if __name__ == '__main__':
         input_shape = [
             (1, None, None, 3),     # input_image: (1, height_pixels, width_pixels, 3)
             (1, None, None, 9 * 4), # anchor_map: (1, height, width, num_anchors * 4)
+            (1, None, None, 9),
             (1, None, None, 9, 6),  # gt_rpn_map: (1, height, width, num_anchors, 6)
             (1, None),              # gt_box_class_idxs_map: (1, num_gt_boxes)
             (1, None, 4)            # gt_box_corners_map: (1, num_gt_boxes, 4)

@@ -32,10 +32,11 @@ class FasterRCNN(tf.keras.Model):
     def call(self,inputs,training = False):
         input_image = inputs[0]
         anchor_map = inputs[1]
+        valid = inputs[2]
         if training:
-            gt_rpn_map = inputs[2]
-            gt_box_class_idx_map = inputs[3]
-            gt_box_corner_map = inputs[4]
+            gt_rpn_map = inputs[3]
+            gt_box_class_idx_map = inputs[4]
+            gt_box_corner_map = inputs[5]
 
         # At first level, extract the features
         feature_map = self._level1_feature_extractor(input_image = input_image)
@@ -45,7 +46,8 @@ class FasterRCNN(tf.keras.Model):
             inputs = [
                 input_image,
                 feature_map,
-                anchor_map
+                anchor_map,
+                valid
             ],
             training = training
         )
