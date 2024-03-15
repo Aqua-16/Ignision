@@ -4,13 +4,13 @@ import tensorflow as tf
 import tensorflow.keras
 from tensorflow.keras import models
 from tensorflow.keras.layers import Conv2D, MaxPooling2D
-from tensorflow.keras.initializers import GlorotNormal
+from tensorflow.keras.initializers import glorot_normal
 
 class BackBone(tf.keras.Model):
     def __init__(self,l2=0):
         super().__init__()
 
-        initial_weights = GlorotNormal(seed = 42)
+        initial_weights = glorot_normal()
         regularizer = tf.keras.regularizers.l2(l2)
         input_shape = (None,None,3)
 

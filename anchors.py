@@ -1,99 +1,107 @@
 # DONE
 
 import numpy as np
+from math import sqrt
 from . import utils
+import itertools
 
-def generate_anchor_map(image_shape,feature_scale):
-    assert len(image_shape) == 3
+def _compute_anchor_sizes():
+  areas = [ 128*128, 256*256, 512*512 ]   # pixels
+  x_aspects = [ 0.5, 1.0, 2.0 ]           # aspect ratios
 
-    areas = [ 128*128, 256*256, 512*512 ] # Values used as per paper
-    aspect_ratios = [ 0.5, 1.0, 2.0 ] # Values used as per paper
+  heights = np.array([ x_aspects[j] * sqrt(areas[i] / x_aspects[j]) for (i, j) in itertools.product(range(3), range(3)) ])
+  widths = np.array([ sqrt(areas[i] / x_aspects[j]) for (i, j) in itertools.product(range(3), range(3)) ])
 
-    h = np.array([ aspect_ratios[j] * ((areas[i]/aspect_ratios[j])**0.5) for (i,j) in [(x,y) for x in range(3) for y in range(3)]])
-    w = np.array([ ((areas[i]/aspect_ratios[j])**0.5) for (i,j) in [(x,y) for x in range(3) for y in range(3)]])
+  return np.vstack([ heights, widths ]).T
 
-    anchor_sizes = np.vstack([h,w]).T
+def generate_anchor_map(image_shape, feature_scale): 
 
-    num = np.shape(anchor_sizes)[0]
-    anchors_base = np.empty((num,4))
-    anchors_base[:,0:2] = anchor_sizes*(-0.5)
-    anchors_base[:,2:4] = anchor_sizes*(0.5)
+  assert len(image_shape) == 3
+ 
+  anchor_sizes = _compute_anchor_sizes()
+  num_anchors = anchor_sizes.shape[0]
+  anchor_template = np.empty((num_anchors, 4))
+  anchor_template[:,0:2] = -0.5 * anchor_sizes  
+  anchor_template[:,2:4] = +0.5 * anchor_sizes  
 
-    h = image_shape[0]//feature_scale
-    w = image_shape[1]//feature_scale
+  height, width = image_shape[0] // feature_scale, image_shape[1] // feature_scale
 
-    y_coords = np.arange(h)
-    x_coords = np.arange(w)
-    grid = np.array(np.meshgrid(y_coords,x_coords)).transpose(2,1,0)
+  y_cell_coords = np.arange(height)
+  x_cell_coords = np.arange(width)
+  cell_coords = np.array(np.meshgrid(y_cell_coords, x_cell_coords)).transpose([2, 1, 0])
 
-    anchor_center_grid = grid * feature_scale + 0.5 * feature_scale
-    anchor_center_grid = np.tile(anchor_center_grid,2*num)
-    anchor_center_grid = anchor_center_grid.astype(np.float32) + anchors_base.flatten()
+  center_points = cell_coords * feature_scale + 0.5 * feature_scale
+  center_points = np.tile(center_points, reps = 2)
+  center_points = np.tile(center_points, reps = num_anchors)
 
-    anchors = anchor_center_grid.reshape((h*w*num,4))
+  anchors = center_points.astype(np.float32) + anchor_template.flatten()
+  anchors = anchors.reshape((height*width*num_anchors, 4))
+  image_height, image_width = image_shape[0:2]
+  valid = np.all((anchors[:,0:2] >= [0,0]) & (anchors[:,2:4] <= [image_height,image_width]), axis = 1)
+  anchor_map = np.empty((anchors.shape[0], 4))
+  anchor_map[:,0:2] = 0.5 * (anchors[:,0:2] + anchors[:,2:4])
+  anchor_map[:,2:4] = anchors[:,2:4] - anchors[:,0:2]
 
-    # Creating anchor_map of the type [center_y,center_x, height, width] as is given in the paper
-    anchor_map = np.empty((anchors.shape[0],4))
-    anchor_map[:,0:2] = 0.5*(anchors[:,0:2] + anchors[:,2:4])
-    anchor_map[:,2:4] = anchors[:,2:4] - anchors[:,0:2]
-
-    # This step is done only to ensure that the final shape is as expected.
-    anchor_map = anchor_map.reshape((h,w,num*4))
+  anchor_map = anchor_map.reshape((height, width, num_anchors * 4))
+  anchor_valid_map = valid.reshape((height, width, num_anchors))
     
-    # valid anchors that don't cross image boundaries
-    image_height, image_width = image_shape[0:2]
-    valid = np.all((anchors[:,0:2] >= [0,0]) & (anchors[:,2:4] <= [image_height,image_width]), axis = 1)
-    valid = valid.reshape((h,w,num))
-    return anchor_map.astype(np.float32), valid.astype(np.float32)
+  return anchor_map.astype(np.float32), anchor_valid_map.astype(np.float32)
 
 def generate_rpn_map(anchor_map, valid, gt_boxes, object_threshold = 0.7, background_threshold = 0.3):
+ 
+  height, width, num_anchors = valid.shape
+  gt_box_corners = np.array([ box.corners for box in gt_boxes ])
+  num_gt_boxes = len(gt_boxes)
 
-    h, w, num_anchors = anchor_map.shape
-    num_anchors = num_anchors//4
+  gt_box_centers = 0.5 * (gt_box_corners[:,0:2] + gt_box_corners[:,2:4])
+  gt_box_length = gt_box_corners[:,2:4] - gt_box_corners[:,0:2]
 
-    gt_box_corners = np.array([box.corners for box in gt_boxes])
-    num_gt_boxes = len(gt_box_corners)
-    gt_box_centers = 0.5*(gt_box_corners[:,0:2] + gt_box_corners[:,2:4])
-    gt_box_lengths = gt_box_corners[:,2:4] - gt_box_corners[:,0:2]
+  anchor_map = anchor_map.reshape((-1,4))
+  anchors = np.empty(anchor_map.shape)
+  anchors[:,0:2] = anchor_map[:,0:2] - 0.5 * anchor_map[:,2:4]  
+  anchors[:,2:4] = anchor_map[:,0:2] + 0.5 * anchor_map[:,2:4]  
+  n = anchors.shape[0]
 
-    # Generating anchor corners
-    anchor_map = anchor_map.reshape((-1,4))
-    anchors = np.empty(anchor_map.shape)
-    anchors[:,0:2] = anchor_map[:,0:2] - 0.5*anchor_map[:,2:4]
-    anchors[:,2:4] = anchor_map[:,0:2] + 0.5*anchor_map[:,2:4]
-    n = anchors.shape[0]
+  # Initialize all anchors initially as negative (background). We will also track which ground truth box was assigned to each anchor.
+  objectness_score = np.full(n, -1)   # Keys = Values : 0 = background, 1 = foreground, -1 = invalid
+  gt_box_assignments = np.full(n, -1) # -1 means no box
+    
+  ious = utils.iou_numpy(boxes1 = anchors, boxes2 = gt_box_corners)
+  ious[valid.flatten() == 0, :] = -1.0
 
-    object_score = np.full(n,-1)
-    gt_box_assignment = np.full(n,-1)
+  max_iou_per_anchor = np.max(ious, axis = 1)           
+  best_box_idx_per_anchor = np.argmax(ious, axis = 1)   
+  max_iou_per_gt_box = np.max(ious, axis = 0)           
+  highest_iou_anchor_idxs = np.where(ious == max_iou_per_gt_box)[0]
+    
+  objectness_score[max_iou_per_anchor < background_threshold] = 0
+  objectness_score[max_iou_per_anchor >= object_threshold] = 1
 
-    ious = utils.iou_numpy(anchors,gt_box_corners)
-    ious[valid.flatten() == 0, :] = -1.0
-    max_iou_anchor = np.max(ious,axis = 1) # Best iou for each anchor
-    highest_gt_box_idx = np.argmax(ious,axis = 1) # Best ground truth box for each anchor
-    max_iou_gt_box = np.max(ious,axis = 0) # Best iou for each ground truth box
-    highest_anchor_idx = np.where(max_iou_gt_box == ious)[0] # Best anchor for each ground truth box
+  # Anchors that overlap the most with ground truth boxes are positive
+  objectness_score[highest_iou_anchor_idxs] = 1
 
-    object_score[max_iou_anchor < background_threshold] = 0
-    object_score[max_iou_anchor >= object_threshold] = 1
-    # Setting anchor boxes with highest ious as 1
-    object_score[highest_anchor_idx] = 1 
-    gt_box_assignment[:] = highest_gt_box_idx
+  # We assign the highest IoU ground truth box to each anchor. If no box met
+  # the IoU threshold, the highest IoU box may happen to be a box for which
+  # the anchor had the highest IoU. If not, then the objectness score will be
+  # negative and the box regression won't ever be used.
+  gt_box_assignments[:] = best_box_idx_per_anchor
 
-    mask = (object_score >= 0).astype(np.float32) # Creating mask for where objects are present
-    object_score[object_score<0] = 0
+ 
+  mask = (objectness_score >= 0).astype(np.float32)
+  objectness_score[objectness_score < 0] = 0
+  
+  box_delta_targets = np.empty((n, 4))
+  box_delta_targets[:,0:2] = (gt_box_centers[gt_box_assignments] - anchor_map[:,0:2]) / anchor_map[:,2:4]
+  box_delta_targets[:,2:4] = np.log(gt_box_length[gt_box_assignments] / anchor_map[:,2:4])                
+    
+  rpn_map = np.zeros((height, width, num_anchors, 6))
+  rpn_map[:,:,:,0] = valid * mask.reshape((height,width,num_anchors))  
+  rpn_map[:,:,:,1] = objectness_score.reshape((height,width,num_anchors))
+  rpn_map[:,:,:,2:6] = box_delta_targets.reshape((height,width,num_anchors,4))
+  
+  
+  rpn_map_coords = np.transpose(np.mgrid[0:height,0:width,0:num_anchors], (1,2,3,0))                  
+  object_anchor_idxs = rpn_map_coords[np.where((rpn_map[:,:,:,1] > 0) & (rpn_map[:,:,:,0] > 0))]      
+  background_anchor_idxs = rpn_map_coords[np.where((rpn_map[:,:,:,1] == 0) & (rpn_map[:,:,:,0] > 0))] 
 
-    # Box deltas for regression of anchor boxes
-    box_deltas = np.empty((n,4))
-    box_deltas[:,0:2] = (gt_box_centers[gt_box_assignment] - anchor_map[:,0:2])/anchor_map[:,2:4]
-    box_deltas[:,2:4] = np.log(gt_box_lengths[gt_box_assignment]/anchor_map[:,2:4])
-
-    rpn_map = np.zeros((h,w,num_anchors,6))
-    rpn_map[:,:,:,0] = valid * mask.reshape((h,w,num_anchors))
-    rpn_map[:,:,:,1] = object_score.reshape((h,w,num_anchors))
-    rpn_map[:,:,:,2:6] = box_deltas.reshape((h,w,num_anchors,4))
-
-    rpn_map_coords = np.transpose( np.mgrid[0:h,0:w,0:num_anchors], (1,2,3,0)) # Every index will return its own coordinates. Useful to find indices
-    pos_anchor_coords = rpn_map_coords[np.where((rpn_map[:,:,:,1] > 0) & (rpn_map[:,:,:,0] > 0))] # Anchors with object
-    neg_anchor_coords = rpn_map_coords[np.where((rpn_map[:,:,:,1] == 0) & (rpn_map[:,:,:,0] > 0))] # Anchors without objects
-
-    return rpn_map.astype(np.float32), pos_anchor_coords, neg_anchor_coords
+  return rpn_map.astype(np.float32), object_anchor_idxs, background_anchor_idxs

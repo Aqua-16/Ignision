@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import numpy as np
+from PIL import Image
 from typing import List
 from typing import Tuple
 
@@ -26,5 +27,5 @@ class TrainingSample:
     gt_rpn_background_indices: List[Tuple[int,int,int]]
     gt_boxes: List[Box]
     image_data: np.ndarray
-    image : np.ndarray
+    image : Image
     filepath: str

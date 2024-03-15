@@ -19,7 +19,7 @@ class train_statistics:
 
     def during_training_step(self,losses):#used once in every iteration to aggregate losses
         self.rpn_class_losses.append(losses["rpn_class_loss"])
-        self.rpn_regression_losses.append(losses["rpn_reg_loss"])
+        self.rpn_regression_losses.append(losses["rpn_regression_loss"])
         self.detector_class_losses.append(losses["detector_class_loss"])
         self.detector_regression_losses.append(losses["detector_regression_loss"])
         self.rpn_class_loss=np.mean(self.rpn_class_losses)
