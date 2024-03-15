@@ -17,7 +17,7 @@ class Dataset:
   
   num_classes = 2
   class_index_to_name = {0:"background",1:"fire"}
-  def __init__(self, direc = "Ignision\dataset", _feature_pixels = 16, augmenting = True, shuffling = True):#if dataset is in any other folder directly change the directory from here
+  def __init__(self, direc , _feature_pixels = 16, augmenting = True, shuffling = True):#if dataset is in any other folder directly change the directory from here
     '''
       direc: directory of dataset
       feature_pixels: size of each cell in img pixels  faster rcnn feature map
@@ -33,7 +33,7 @@ class Dataset:
     self.num_classes = 2
     self.filepaths = self.file_paths()#returns a list of image file paths
     self.num_samples = len(self.filepaths)#number of samples
-    self.gt_boxes_by_filepath = self.get_gt_boxes() 
+    self.gt_boxes_by_filepath = self.get_gt_boxes(fpaths=self.filepaths)
     self.i = 0 # track current iteration index
     self.iterable_filepaths = self.filepaths.copy()# copy is used for iteration and shuffling if specified
     self.feature_pixels = _feature_pixels
@@ -114,14 +114,17 @@ class Dataset:
     )
 
   def file_paths(self):
-    image_paths = [os.path.join(self.direc, "Datacluster Fire and Smoke Sample", f"Datacluster Fire and Smoke Sample ({i}).jpg") for i in range(1, 101) if (i != 79)]
+    image_paths=[]
+    for file in os.listdir(self.direc):
+      if file.endswith(".jpg"):
+        image_paths.append(os.path.join(self.direc,file))
     return image_paths
 
 
-  def get_gt_boxes(self):
+  def get_gt_boxes(self,fpaths):
     gt_boxes_by_filepath = {}
-    annot_paths = [os.path.join(self.direc, "Annotations", f"Datacluster Fire and Smoke Sample ({i}).xml") for i in range(1, 101) if (i != 79)]
-    for annot_path in annot_paths:
+    for path in fpaths:
+      annot_path=Dataset.filepathtoannotpath(path)
       tree = ET.parse(annot_path)# Parses the XML annotation file using the ElementTree library
       root = tree.getroot()
       assert len(root.findall("size")) == 1 #checks if there is only one size element in the xml file or not
@@ -130,7 +133,7 @@ class Dataset:
       for obj in root.findall("object"):
         assert len(obj.findall("name")) == 1
         assert len(obj.findall("bndbox")) == 1
-        class_name = obj.find("name").text
+        class_name = obj.find("name").text.lower()
         bndbox = obj.find("bndbox")
         assert len(bndbox.findall("xmin")) == 1
         assert len(bndbox.findall("ymin")) == 1
@@ -150,11 +153,10 @@ class Dataset:
     return gt_boxes_by_filepath
   
   def filepathtoannotpath(filepath):
-      directory, filename = os.path.split(filepath)
-      filename = filename.split(".")[0] + ".xml"
-      adir = directory.replace("Datacluster Fire and Smoke Sample", "Annotations")
+      dir, fname = os.path.split(filepath)
+      fwoext, _ = os.path.splitext(fname)
+      fwoext = fwoext + ".xml"
+      dir = os.path.join(dir, fwoext)
       
-      adir = os.path.join(adir, filename)
-      
-      return adir
+      return dir
   

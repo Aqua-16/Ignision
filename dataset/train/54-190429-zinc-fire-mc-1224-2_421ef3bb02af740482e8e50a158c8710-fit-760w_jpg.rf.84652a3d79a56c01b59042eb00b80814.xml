@@ -1,0 +1,27 @@
+<annotation>
+	<folder></folder>
+	<filename>54-190429-zinc-fire-mc-1224-2_421ef3bb02af740482e8e50a158c8710-fit-760w_jpg.rf.84652a3d79a56c01b59042eb00b80814.jpg</filename>
+	<path>54-190429-zinc-fire-mc-1224-2_421ef3bb02af740482e8e50a158c8710-fit-760w_jpg.rf.84652a3d79a56c01b59042eb00b80814.jpg</path>
+	<source>
+		<database>roboflow.ai</database>
+	</source>
+	<size>
+		<width>760</width>
+		<height>524</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>Fire</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>357</xmin>
+			<xmax>387</xmax>
+			<ymin>290</ymin>
+			<ymax>324</ymax>
+		</bndbox>
+	</object>
+</annotation>

@@ -1,0 +1,27 @@
+<annotation>
+	<folder></folder>
+	<filename>NoiseWEBFire1099_jpg.rf.c1093f26775351d5d2c3bf3600129373.jpg</filename>
+	<path>NoiseWEBFire1099_jpg.rf.c1093f26775351d5d2c3bf3600129373.jpg</path>
+	<source>
+		<database>roboflow.ai</database>
+	</source>
+	<size>
+		<width>1280</width>
+		<height>720</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>Fire</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>612</xmin>
+			<xmax>745</xmax>
+			<ymin>103</ymin>
+			<ymax>213</ymax>
+		</bndbox>
+	</object>
+</annotation>

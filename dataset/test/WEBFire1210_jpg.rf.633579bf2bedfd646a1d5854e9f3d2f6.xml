@@ -1,0 +1,27 @@
+<annotation>
+	<folder></folder>
+	<filename>WEBFire1210_jpg.rf.633579bf2bedfd646a1d5854e9f3d2f6.jpg</filename>
+	<path>WEBFire1210_jpg.rf.633579bf2bedfd646a1d5854e9f3d2f6.jpg</path>
+	<source>
+		<database>roboflow.ai</database>
+	</source>
+	<size>
+		<width>1280</width>
+		<height>720</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>Fire</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>655</xmin>
+			<xmax>850</xmax>
+			<ymin>332</ymin>
+			<ymax>444</ymax>
+		</bndbox>
+	</object>
+</annotation>

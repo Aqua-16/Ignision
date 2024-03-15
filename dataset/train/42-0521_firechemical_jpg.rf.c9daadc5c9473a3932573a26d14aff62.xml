@@ -1,0 +1,27 @@
+<annotation>
+	<folder></folder>
+	<filename>42-0521_firechemical_jpg.rf.c9daadc5c9473a3932573a26d14aff62.jpg</filename>
+	<path>42-0521_firechemical_jpg.rf.c9daadc5c9473a3932573a26d14aff62.jpg</path>
+	<source>
+		<database>roboflow.ai</database>
+	</source>
+	<size>
+		<width>694</width>
+		<height>540</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>Fire</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>9</xmin>
+			<xmax>400</xmax>
+			<ymin>8</ymin>
+			<ymax>530</ymax>
+		</bndbox>
+	</object>
+</annotation>
