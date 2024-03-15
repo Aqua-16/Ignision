@@ -66,7 +66,6 @@ class Dataset:
     else:
       sample_by_filepath=self.unaugmented_cached_sample_by_filepath
   
-    # Load and, if caching, write back to cache
     if filepath in sample_by_filepath:
       sample = sample_by_filepath[filepath]
     else:
@@ -137,10 +136,10 @@ class Dataset:
         assert len(bndbox.findall("ymin")) == 1
         assert len(bndbox.findall("xmax")) == 1
         assert len(bndbox.findall("ymax")) == 1
-        x_min = round(float(bndbox.find("xmin").text)) - 1
-        y_min = round(float(bndbox.find("ymin").text)) - 1
-        x_max = round(float(bndbox.find("xmax").text)) - 1
-        y_max = round(float(bndbox.find("ymax").text)) - 1
+        x_min = float(bndbox.find("xmin").text)
+        y_min = float(bndbox.find("ymin").text)
+        x_max = float(bndbox.find("xmax").text)
+        y_max = float(bndbox.find("ymax").text)
         corners = np.array([ y_min, x_min, y_max, x_max ]).astype(np.float32)
         box = Box(class_index = self.class_name_to_index[class_name], class_name = class_name, corners = corners)
         boxes.append(box)

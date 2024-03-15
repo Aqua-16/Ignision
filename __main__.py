@@ -18,44 +18,43 @@ from . import utils
 from . import anchors
 from . import image as img
 
-def _get_sample_rpn_minibatch(rpn_map,object_indices,background_indices,mini_size):
-    # This selects a subset of anchors for training and returns a copy of the ground truth RPN map with only those anchors marked for training
+def _get_sample_rpn_minibatch(rpn_map, object_indices, background_indices, rpn_minibatch_size):
 
-    assert rpn_map.shape[0] == 1, "Batch size must be 1"
-    assert len(object_indices) == 1, "Batch size must be 1"
-    assert len(background_indices) == 1, "Batch size must be 1"
-    positive_anchors = object_indices[0]
-    negative_anchors = background_indices[0]
+   # This selects a subset of anchors for training and returns a copy of the ground truth RPN map with only those anchors marked for training
+  
+  assert rpn_map.shape[0] == 1, "Batch size must be 1"
+  assert len(object_indices) == 1, "Batch size must be 1"
+  assert len(background_indices) == 1, "Batch size must be 1"
+  positive_anchors = object_indices[0]
+  negative_anchors = background_indices[0]
+  assert len(positive_anchors) + len(negative_anchors) >= rpn_minibatch_size, "Image has insufficient anchors for RPN minibatch size"
+  assert len(positive_anchors) > 0, "Image does not have any positive anchors"
+  assert rpn_minibatch_size % 2 == 0, "RPN minibatch size must be even"
 
-    assert len(positive_anchors) + len(negative_anchors) >= mini_size, f"Image has insufficient anchors for RPN minibatch size"
-    assert len(positive_anchors) > 0, "Image does not have any positive anchors"
-    assert mini_size % 2 == 0, "RPN minibatch size must be even"
+  num_positive_anchors = len(positive_anchors)
+  num_negative_anchors = len(negative_anchors)
+  num_positive_samples = min(rpn_minibatch_size // 2, num_positive_anchors) 
+  num_negative_samples = rpn_minibatch_size - num_positive_samples          
+  positive_anchor_idxs = random.sample(range(num_positive_anchors), num_positive_samples)
+  negative_anchor_idxs = random.sample(range(num_negative_anchors), num_negative_samples)
 
-    num_pos = len(positive_anchors)
-    num_neg = len(negative_anchors)
-    num_pos_samples = min(mini_size//2, num_pos) # At least half of the minibatch should comprise of positive samples
-    num_neg_samples = mini_size - num_pos_samples
-    pos_indices = random.sample(range(num_pos), num_pos_samples)
-    assert num_neg > num_neg_samples, f"{num_neg} is smaller than {num_neg_samples}."
-    neg_indices = random.sample(range(num_neg), num_neg_samples)
+  
+  positive_anchors = positive_anchors[positive_anchor_idxs]
+  negative_anchors = negative_anchors[negative_anchor_idxs]
+  trainable_anchors = np.concatenate([ positive_anchors, negative_anchors ])
+  batch_idxs = np.zeros(len(trainable_anchors), dtype = int)
+  trainable_idxs = (batch_idxs, trainable_anchors[:,0], trainable_anchors[:,1], trainable_anchors[:,2], 0)
 
-    positive_anchors = positive_anchors[pos_indices]
-    negative_anchors = negative_anchors[neg_indices]
-    train_anchors = np.concatenate([positive_anchors, negative_anchors])
-    batch_idx = np.zeros(len(train_anchors), dtype = int)
-    train_indices = (batch_idx, train_anchors[:,0], train_anchors[:,1], train_anchors[:,2], 0)
+  rpn_minibatch_map = rpn_map.copy()
+  rpn_minibatch_map[:,:,:,:,0] = 0
+  rpn_minibatch_map[trainable_idxs] = 1
 
-    rpn_minibatch = rpn_map.copy()
-    rpn_minibatch[:,:,:,:,0] = 0
-    rpn_minibatch[train_indices] = 1
+  return rpn_minibatch_map
 
-    return rpn_minibatch
+def _convert_sample_to_model_input(sample, mode):
 
-def _convert_sample_to_model_input(sample,mode):
     gt_box_corners = np.array([ box.corners for box in sample.gt_boxes ]).astype(np.float32) 
-    gt_box_class_idxs = np.array([ box.class_index for box in sample.gt_boxes ]).astype(np.int32) 
-    gt_box_corners = np.expand_dims(gt_box_corners, axis = 0)
-    gt_box_class_idxs = np.expand_dims(gt_box_class_idxs, axis = 0)
+    gt_box_class_idxs = np.array([ box.class_index for box in sample.gt_boxes ]).astype(np.int32)   
 
     image_data = np.expand_dims(sample.image_data, axis = 0)
     image_shape_map = np.array([ [ image_data.shape[1], image_data.shape[2], image_data.shape[3] ] ])
@@ -64,19 +63,22 @@ def _convert_sample_to_model_input(sample,mode):
     gt_rpn_map = np.expand_dims(sample.gt_rpn_map, axis = 0)
     gt_rpn_object_indices = [ sample.gt_rpn_object_indices ]
     gt_rpn_background_indices = [ sample.gt_rpn_background_indices ]
-    gt_rpn_minibatch =  _get_sample_rpn_minibatch(
-        rpn_map = gt_rpn_map,
-        object_indices = gt_rpn_object_indices,
-        background_indices = gt_rpn_background_indices,
-        mini_size = 256
+    gt_box_corners = np.expand_dims(gt_box_corners, axis = 0)
+    gt_box_class_idxs = np.expand_dims(gt_box_class_idxs, axis = 0)
+    
+    gt_rpn_minibatch_map = _get_sample_rpn_minibatch(
+      rpn_map = gt_rpn_map,
+      object_indices = gt_rpn_object_indices,
+      background_indices = gt_rpn_background_indices,
+      rpn_minibatch_size = 256
     )
 
     if mode == "train":
-        x = [ image_data, anchor_map, valid, gt_rpn_minibatch, gt_box_class_idxs, gt_box_corners ]
-    else: # prediction
-        x = [ image_data, anchor_map , valid ]
+      x = [ image_data, anchor_map, valid, gt_rpn_minibatch_map, gt_box_class_idxs, gt_box_corners ]
+    else: # "predict"
+      x = [ image_data, anchor_map, valid ]
 
-    return x, image_data, gt_rpn_minibatch # Returned like so for convenience
+    return x, image_data, gt_rpn_minibatch_map # Returned like this for convenience
 
 def evaluate(model,eval_data=None,num_samples = None, plot=False,print_AP=False):
     prc=PRCCalc()
@@ -108,7 +110,7 @@ def train(model):
     print(f"Weight decay              : {options.weight_decay}")
     print(f"Dropout                   : {options.dropout}")
 
-    training_data = dataset.Dataset(shuffling = False)
+    training_data = dataset.Dataset(augmenting = True, shuffling = False)
     eval_data = dataset.Dataset(augmenting = False, shuffling = False)
 
     if options.checkpoint_dir and not os.path.exists(options.checkpoint_dir):
@@ -191,7 +193,7 @@ if __name__ == '__main__':
 
     # Run-time environment
     cuda_available = tf.test.is_built_with_cuda()
-    gpu_available = tf.test.is_gpu_available(cuda_only = False, min_cuda_compute_capability = None)
+    gpu_available = tf.config.list_physical_devices('GPU')
     print("CUDA Available : %s" % ("yes" if cuda_available else "no"))
     print("GPU Available  : %s" % ("yes" if gpu_available else "no"))
     print("Eager Execution: %s" % ("yes" if tf.executing_eagerly() else "no"))
@@ -205,12 +207,12 @@ if __name__ == '__main__':
 
     model.build(
         input_shape = [
-            (1, None, None, 3),     # input_image: (1, height_pixels, width_pixels, 3)
-            (1, None, None, 9 * 4), # anchor_map: (1, height, width, num_anchors * 4)
-            (1, None, None, 9),
-            (1, None, None, 9, 6),  # gt_rpn_map: (1, height, width, num_anchors, 6)
-            (1, None),              # gt_box_class_idxs_map: (1, num_gt_boxes)
-            (1, None, 4)            # gt_box_corners_map: (1, num_gt_boxes, 4)
+              (1, None, None, 3),     # input_image: (1, height_pixels, width_pixels, 3)
+              (1, None, None, 9 * 4), # anchor_map: (1, height, width, num_anchors * 4)
+              (1, None, None, 9),     # valid: (1, height, width, num_anchors)
+              (1, None, None, 9, 6),  # gt_rpn_map: (1, height, width, num_anchors, 6)
+              (1, None),              # gt_box_class_idxs_map: (1, num_gt_boxes)
+              (1, None, 4)            # gt_box_corners_map: (1, num_gt_boxes, 4)
         ]
     )
     optimizer = SGD(learning_rate = options.learning_rate, momentum = 0.9)
@@ -220,7 +222,7 @@ if __name__ == '__main__':
         model.load_weights(filepath = options.load_from, by_name = True)
         print("Loaded initial weights from '%s'" % options.load_from)
     else:
-        model.load_imgnet_wts()
+        model.load_imagenet_weights()
         print("Initialized VGG-16 layers to Keras ImageNet weights")
 
     if options.train:
