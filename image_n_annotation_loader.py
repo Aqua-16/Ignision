@@ -17,13 +17,14 @@ class Dataset:
   
   num_classes = 2
   class_index_to_name = {0:"background",1:"fire"}
-  def __init__(self, direc , _feature_pixels = 16, augmenting = True, shuffling = True):#if dataset is in any other folder directly change the directory from here
+  def __init__(self, direc , split = "train",  _feature_pixels = 16, augmenting = True, shuffling = True):#if dataset is in any other folder directly change the directory from here
     '''
       direc: directory of dataset
       feature_pixels: size of each cell in img pixels  faster rcnn feature map
       augment: boolean specifying whether to filp 50% of images horizontally to increase diversity
       shuffle: boolean specifying whether to shuffle dataset everytime we iterate it
     '''
+    direc = direc + "\\" + split
     if not os.path.exists(direc):
       raise FileNotFoundError(f"Dataset directory does not exist: {direc}")
     
@@ -33,6 +34,9 @@ class Dataset:
     self.num_classes = 2
     self.filepaths = self.file_paths()#returns a list of image file paths
     self.num_samples = len(self.filepaths)#number of samples
+    if split == "train":
+        self.num_samples = min(500,self.num_samples)
+    self.filepaths = self.filepaths[:self.num_samples]
     self.gt_boxes_by_filepath = self.get_gt_boxes(fpaths=self.filepaths)
     self.i = 0 # track current iteration index
     self.iterable_filepaths = self.filepaths.copy()# copy is used for iteration and shuffling if specified
@@ -70,17 +74,21 @@ class Dataset:
       sample = sample_by_filepath[filepath]
     else:
       sample = self._generate_training_sample(filepath = filepath, flip = flip)
-    sample_by_filepath[filepath] = sample
+      sample_by_filepath[filepath] = sample
     return sample
 
   def _generate_training_sample(self, filepath, flip):
-    scaled_image_data, scaled_image, scale_factor,original_shape = image.load_image(path = filepath, flip = flip)
+    tree = ET.parse(filepath)# Parses the XML annotation file using the ElementTree library
+    root = tree.getroot()
+    assert len(root.findall("filename"))==1, f"Too many file paths in : {filepath}"
+    image_path = root.find("filename").text
+    image_path = os.path.join(self.direc,image_path)
+    scaled_image_data, scaled_image, scale_factor,original_shape = image.load_image(path = image_path, flip = flip)
     _, original_height, original_width = original_shape # depth is dicarded
 
     # Scale ground truth boxes to new image size
     scaled_gt_boxes = []
-    annotationpath=Dataset.filepathtoannotpath(filepath)
-    for box in self.gt_boxes_by_filepath[annotationpath]:
+    for box in self.gt_boxes_by_filepath[filepath]:
       if flip:
         corners = np.array([
           box.corners[0],
@@ -116,15 +124,14 @@ class Dataset:
   def file_paths(self):
     image_paths=[]
     for file in os.listdir(self.direc):
-      if file.endswith(".jpg"):
+      if file.endswith(".xml"):
         image_paths.append(os.path.join(self.direc,file))
     return image_paths
 
 
   def get_gt_boxes(self,fpaths):
     gt_boxes_by_filepath = {}
-    for path in fpaths:
-      annot_path=Dataset.filepathtoannotpath(path)
+    for annot_path in fpaths:
       tree = ET.parse(annot_path)# Parses the XML annotation file using the ElementTree library
       root = tree.getroot()
       assert len(root.findall("size")) == 1 #checks if there is only one size element in the xml file or not
@@ -151,12 +158,3 @@ class Dataset:
       gt_boxes_by_filepath[annot_path] = boxes
     
     return gt_boxes_by_filepath
-  
-  def filepathtoannotpath(filepath):
-      dir, fname = os.path.split(filepath)
-      fwoext, _ = os.path.splitext(fname)
-      fwoext = fwoext + ".xml"
-      dir = os.path.join(dir, fwoext)
-      
-      return dir
-  
