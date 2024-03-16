@@ -111,7 +111,7 @@ def train(model):
     print(f"Dropout                   : {options.dropout}")
 
     training_data = dataset.Dataset(direc = "Ignision\\dataset\\train",augmenting = False, shuffling = False)
-    eval_data = dataset.Dataset(direc = "Ignision\\dataset\\train",augmenting = False, shuffling = False)
+    eval_data = dataset.Dataset(direc = "Ignision\\dataset\\test",augmenting = False, shuffling = False)
 
     if options.checkpoint_dir and not os.path.exists(options.checkpoint_dir):
         os.makedirs(options.checkpoint_dir)
