@@ -110,7 +110,6 @@ def train(model):
     print(f"Weight decay              : {options.weight_decay}")
     print(f"Dropout                   : {options.dropout}")
 
-    training_data = dataset.Dataset(direc = "Ignision\\dataset",split = "train", augmenting = True, shuffling = True)
     eval_data = dataset.Dataset(direc = "Ignision\\dataset", split = "test", augmenting = False, shuffling = False)
 
     if options.checkpoint_dir and not os.path.exists(options.checkpoint_dir):
@@ -119,6 +118,7 @@ def train(model):
         best_weights_tracker = utils.BestWeightsTracker(filepath = options.save_best_to)
 
     for epoch in range(1,1+options.epochs):
+        training_data = dataset.Dataset(direc = "Ignision\\dataset",split = "train", augmenting = True, shuffling = True)
         print(f"Epoch       {epoch}/{options.epochs}")
         stats = train_statistics()
         progbar = tqdm(iterable = iter(training_data), total = training_data.num_samples, postfix = stats.progress_bar_postfix())
@@ -131,7 +131,7 @@ def train(model):
         mAP = evaluate( # Mean Average Precision
                 model=model,
                 eval_data=eval_data,
-                num_samples=99,#number of samples to use for eval after each iter
+                num_samples=100,#number of samples to use for eval after each iter
                 plot=False,
                 print_AP=False
         ) 
@@ -192,8 +192,13 @@ if __name__ == '__main__':
     options = parser.parse_args()
 
     # Run-time environment
+    tf.config.set_visible_devices([], 'GPU')
     cuda_available = tf.test.is_built_with_cuda()
     gpu_available = tf.config.list_physical_devices('GPU')
+    if gpu_available:
+        for gpu in gpu_available:
+            print(gpu)
+            tf.config.experimental.set_memory_growth(gpu, True)
     print("CUDA Available : %s" % ("yes" if cuda_available else "no"))
     print("GPU Available  : %s" % ("yes" if gpu_available else "no"))
     print("Eager Execution: %s" % ("yes" if tf.executing_eagerly() else "no"))
