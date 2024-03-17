@@ -110,6 +110,7 @@ def train(model):
     print(f"Weight decay              : {options.weight_decay}")
     print(f"Dropout                   : {options.dropout}")
 
+    training_data = dataset.Dataset(direc = "Ignision\\dataset",split = "train", augmenting = True, shuffling = True)
     eval_data = dataset.Dataset(direc = "Ignision\\dataset", split = "test", augmenting = False, shuffling = False)
 
     if options.checkpoint_dir and not os.path.exists(options.checkpoint_dir):
@@ -118,7 +119,7 @@ def train(model):
         best_weights_tracker = utils.BestWeightsTracker(filepath = options.save_best_to)
 
     for epoch in range(1,1+options.epochs):
-        training_data = dataset.Dataset(direc = "Ignision\\dataset",split = "train", augmenting = True, shuffling = True)
+        
         print(f"Epoch       {epoch}/{options.epochs}")
         stats = train_statistics()
         progbar = tqdm(iterable = iter(training_data), total = training_data.num_samples, postfix = stats.progress_bar_postfix())
