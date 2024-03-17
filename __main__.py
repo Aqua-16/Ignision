@@ -20,36 +20,36 @@ from . import image as img
 
 def _get_sample_rpn_minibatch(rpn_map, object_indices, background_indices, rpn_minibatch_size):
 
-   # This selects a subset of anchors for training and returns a copy of the ground truth RPN map with only those anchors marked for training
-  
-  assert rpn_map.shape[0] == 1, "Batch size must be 1"
-  assert len(object_indices) == 1, "Batch size must be 1"
-  assert len(background_indices) == 1, "Batch size must be 1"
-  positive_anchors = object_indices[0]
-  negative_anchors = background_indices[0]
-  assert len(positive_anchors) + len(negative_anchors) >= rpn_minibatch_size, "Image has insufficient anchors for RPN minibatch size"
-  assert len(positive_anchors) > 0, "Image does not have any positive anchors"
-  assert rpn_minibatch_size % 2 == 0, "RPN minibatch size must be even"
+    # This selects a subset of anchors for training and returns a copy of the ground truth RPN map with only those anchors marked for training
+    
+    assert rpn_map.shape[0] == 1, "Batch size must be 1"
+    assert len(object_indices) == 1, "Batch size must be 1"
+    assert len(background_indices) == 1, "Batch size must be 1"
+    positive_anchors = object_indices[0]
+    negative_anchors = background_indices[0]
+    assert len(positive_anchors) + len(negative_anchors) >= rpn_minibatch_size, "Image has insufficient anchors for RPN minibatch size"
+    assert len(positive_anchors) > 0, "Image does not have any positive anchors"
+    assert rpn_minibatch_size % 2 == 0, "RPN minibatch size must be even"
 
-  num_positive_anchors = len(positive_anchors)
-  num_negative_anchors = len(negative_anchors)
-  num_positive_samples = min(rpn_minibatch_size // 2, num_positive_anchors) 
-  num_negative_samples = rpn_minibatch_size - num_positive_samples          
-  positive_anchor_idxs = random.sample(range(num_positive_anchors), num_positive_samples)
-  negative_anchor_idxs = random.sample(range(num_negative_anchors), num_negative_samples)
+    num_positive_anchors = len(positive_anchors)
+    num_negative_anchors = len(negative_anchors)
+    num_positive_samples = min(rpn_minibatch_size // 2, num_positive_anchors) 
+    num_negative_samples = rpn_minibatch_size - num_positive_samples          
+    positive_anchor_idxs = random.sample(range(num_positive_anchors), num_positive_samples)
+    negative_anchor_idxs = random.sample(range(num_negative_anchors), num_negative_samples)
 
-  
-  positive_anchors = positive_anchors[positive_anchor_idxs]
-  negative_anchors = negative_anchors[negative_anchor_idxs]
-  trainable_anchors = np.concatenate([ positive_anchors, negative_anchors ])
-  batch_idxs = np.zeros(len(trainable_anchors), dtype = int)
-  trainable_idxs = (batch_idxs, trainable_anchors[:,0], trainable_anchors[:,1], trainable_anchors[:,2], 0)
+    
+    positive_anchors = positive_anchors[positive_anchor_idxs]
+    negative_anchors = negative_anchors[negative_anchor_idxs]
+    trainable_anchors = np.concatenate([ positive_anchors, negative_anchors ])
+    batch_idxs = np.zeros(len(trainable_anchors), dtype = int)
+    trainable_idxs = (batch_idxs, trainable_anchors[:,0], trainable_anchors[:,1], trainable_anchors[:,2], 0)
 
-  rpn_minibatch_map = rpn_map.copy()
-  rpn_minibatch_map[:,:,:,:,0] = 0
-  rpn_minibatch_map[trainable_idxs] = 1
+    rpn_minibatch_map = rpn_map.copy()
+    rpn_minibatch_map[:,:,:,:,0] = 0
+    rpn_minibatch_map[trainable_idxs] = 1
 
-  return rpn_minibatch_map
+    return rpn_minibatch_map
 
 def _convert_sample_to_model_input(sample, mode):
 
@@ -110,8 +110,7 @@ def train(model):
     print(f"Weight decay              : {options.weight_decay}")
     print(f"Dropout                   : {options.dropout}")
 
-    training_data = dataset.Dataset(augmenting = True, shuffling = False)
-    eval_data = dataset.Dataset(augmenting = False, shuffling = False)
+    eval_data = dataset.Dataset(direc = "Ignision\\dataset", split = "test", augmenting = False, shuffling = False)
 
     if options.checkpoint_dir and not os.path.exists(options.checkpoint_dir):
         os.makedirs(options.checkpoint_dir)
@@ -119,6 +118,7 @@ def train(model):
         best_weights_tracker = utils.BestWeightsTracker(filepath = options.save_best_to)
 
     for epoch in range(1,1+options.epochs):
+        training_data = dataset.Dataset(direc = "Ignision\\dataset",split = "train", augmenting = True, shuffling = True)
         print(f"Epoch       {epoch}/{options.epochs}")
         stats = train_statistics()
         progbar = tqdm(iterable = iter(training_data), total = training_data.num_samples, postfix = stats.progress_bar_postfix())
@@ -131,7 +131,7 @@ def train(model):
         mAP = evaluate( # Mean Average Precision
                 model=model,
                 eval_data=eval_data,
-                num_samples=99,#number of samples to use for eval after each iter
+                num_samples=100,#number of samples to use for eval after each iter
                 plot=False,
                 print_AP=False
         ) 
@@ -192,8 +192,13 @@ if __name__ == '__main__':
     options = parser.parse_args()
 
     # Run-time environment
+    tf.config.set_visible_devices([], 'GPU')
     cuda_available = tf.test.is_built_with_cuda()
     gpu_available = tf.config.list_physical_devices('GPU')
+    if gpu_available:
+        for gpu in gpu_available:
+            print(gpu)
+            tf.config.experimental.set_memory_growth(gpu, True)
     print("CUDA Available : %s" % ("yes" if cuda_available else "no"))
     print("GPU Available  : %s" % ("yes" if gpu_available else "no"))
     print("Eager Execution: %s" % ("yes" if tf.executing_eagerly() else "no"))

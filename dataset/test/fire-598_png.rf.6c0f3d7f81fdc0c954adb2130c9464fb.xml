@@ -1,0 +1,27 @@
+<annotation>
+	<folder></folder>
+	<filename>fire-598_png.rf.6c0f3d7f81fdc0c954adb2130c9464fb.jpg</filename>
+	<path>fire-598_png.rf.6c0f3d7f81fdc0c954adb2130c9464fb.jpg</path>
+	<source>
+		<database>roboflow.ai</database>
+	</source>
+	<size>
+		<width>1900</width>
+		<height>1266</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>Fire</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>1545</xmin>
+			<xmax>1901</xmax>
+			<ymin>641</ymin>
+			<ymax>987</ymax>
+		</bndbox>
+	</object>
+</annotation>

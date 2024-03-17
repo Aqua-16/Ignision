@@ -1,0 +1,27 @@
+<annotation>
+	<folder></folder>
+	<filename>32-fire-in-kampong-cham_jpg.rf.a2f84c5eba4719be18ebacf69525ad2d.jpg</filename>
+	<path>32-fire-in-kampong-cham_jpg.rf.a2f84c5eba4719be18ebacf69525ad2d.jpg</path>
+	<source>
+		<database>roboflow.ai</database>
+	</source>
+	<size>
+		<width>850</width>
+		<height>567</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>Fire</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>441</xmin>
+			<xmax>511</xmax>
+			<ymin>244</ymin>
+			<ymax>315</ymax>
+		</bndbox>
+	</object>
+</annotation>

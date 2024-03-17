@@ -1,0 +1,27 @@
+<annotation>
+	<folder></folder>
+	<filename>MirrorWEBFire1442_jpg.rf.44c1979a9bac231bdfecc835ec118e7c.jpg</filename>
+	<path>MirrorWEBFire1442_jpg.rf.44c1979a9bac231bdfecc835ec118e7c.jpg</path>
+	<source>
+		<database>roboflow.ai</database>
+	</source>
+	<size>
+		<width>1280</width>
+		<height>720</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>Fire</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>516</xmin>
+			<xmax>565</xmax>
+			<ymin>407</ymin>
+			<ymax>452</ymax>
+		</bndbox>
+	</object>
+</annotation>

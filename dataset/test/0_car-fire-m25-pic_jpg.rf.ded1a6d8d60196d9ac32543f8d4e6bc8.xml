@@ -1,0 +1,27 @@
+<annotation>
+	<folder></folder>
+	<filename>0_car-fire-m25-pic_jpg.rf.ded1a6d8d60196d9ac32543f8d4e6bc8.jpg</filename>
+	<path>0_car-fire-m25-pic_jpg.rf.ded1a6d8d60196d9ac32543f8d4e6bc8.jpg</path>
+	<source>
+		<database>roboflow.ai</database>
+	</source>
+	<size>
+		<width>615</width>
+		<height>525</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>Fire</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>200</xmin>
+			<xmax>306</xmax>
+			<ymin>243</ymin>
+			<ymax>347</ymax>
+		</bndbox>
+	</object>
+</annotation>

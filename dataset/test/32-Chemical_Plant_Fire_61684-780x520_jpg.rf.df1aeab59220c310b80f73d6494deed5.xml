@@ -1,0 +1,27 @@
+<annotation>
+	<folder></folder>
+	<filename>32-Chemical_Plant_Fire_61684-780x520_jpg.rf.df1aeab59220c310b80f73d6494deed5.jpg</filename>
+	<path>32-Chemical_Plant_Fire_61684-780x520_jpg.rf.df1aeab59220c310b80f73d6494deed5.jpg</path>
+	<source>
+		<database>roboflow.ai</database>
+	</source>
+	<size>
+		<width>780</width>
+		<height>520</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>Fire</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>436</xmin>
+			<xmax>450</xmax>
+			<ymin>312</ymin>
+			<ymax>332</ymax>
+		</bndbox>
+	</object>
+</annotation>

@@ -1,0 +1,27 @@
+<annotation>
+	<folder></folder>
+	<filename>26-KTRK-arkema-plant-burning-01-ktrk-jc-170901_4x3_992_jpg.rf.28f882d9448ec57ea55dc8d20e9c9cca.jpg</filename>
+	<path>26-KTRK-arkema-plant-burning-01-ktrk-jc-170901_4x3_992_jpg.rf.28f882d9448ec57ea55dc8d20e9c9cca.jpg</path>
+	<source>
+		<database>roboflow.ai</database>
+	</source>
+	<size>
+		<width>992</width>
+		<height>744</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>Fire</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>363</xmin>
+			<xmax>537</xmax>
+			<ymin>260</ymin>
+			<ymax>537</ymax>
+		</bndbox>
+	</object>
+</annotation>
