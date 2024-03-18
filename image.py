@@ -13,18 +13,21 @@ def preprocess_vgg16(image_data):
   return image_data
     
 def load_image(path,flip=None):
-    data = imageio.imread(path, pilmode = "RGB")
-    image = Image.fromarray(data, mode = "RGB")
-    W, H = image.width, image.height
-    if flip:
-        image = image.transpose(method = Image.FLIP_LEFT_RIGHT)
-    scale_factor=600/min(H,W)
-    h = int(H*scale_factor)
-    w = int(W*scale_factor)
-    image = image.resize((w, h), resample = Image.BILINEAR)
-    image_data = np.array(image).astype(np.float32)
-    image_data = preprocess_vgg16(image_data = image_data)
-    return image_data,image,scale_factor,(image_data.shape[0],H,W)
+    try:
+        data = imageio.imread(path, pilmode = "RGB")
+        image = Image.fromarray(data, mode = "RGB")
+        W, H = image.width, image.height
+        if flip:
+            image = image.transpose(method = Image.FLIP_LEFT_RIGHT)
+        scale_factor=600/min(H,W)
+        h = int(H*scale_factor)
+        w = int(W*scale_factor)
+        image = image.resize((w, h), resample = Image.BILINEAR)
+        image_data = np.array(image).astype(np.float32)
+        image_data = preprocess_vgg16(image_data = image_data)
+        return image_data,image,scale_factor,(image_data.shape[0],H,W)
+    except:
+        return None,None,None,None
 
 def show_detections(out_path,image,scored_boxes_class_idx,class_idx_name):
     image_ = np.array(image)

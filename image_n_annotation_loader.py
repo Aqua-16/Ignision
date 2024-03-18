@@ -1,5 +1,3 @@
-# Done
-
 import numpy as np
 import os
 from pathlib import Path
@@ -84,7 +82,9 @@ class Dataset:
     image_path = root.find("filename").text
     image_path = os.path.join(self.direc,image_path)
     scaled_image_data, scaled_image, scale_factor,original_shape = image.load_image(path = image_path, flip = flip)
-    _, original_height, original_width = original_shape # depth is dicarded
+    if scaled_image_data is None:
+      return None
+    _, _, original_width = original_shape # depth is dicarded
 
     # Scale ground truth boxes to new image size
     scaled_gt_boxes = []

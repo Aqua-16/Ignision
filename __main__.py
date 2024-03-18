@@ -85,6 +85,8 @@ def evaluate(model,eval_data=None,num_samples = None, plot=False,print_AP=False)
     i=0
     #print(f"Evaluating {eval_data.split} ...")
     for sample in tqdm(iterable=iter(eval_data), total=num_samples):
+        if sample is None:
+            continue
         x, _ , _ = _convert_sample_to_model_input(sample = sample, mode = "predict")
         scored_boxes_by_class_index = model.predict_on_batch(x = x, threshold = 0.05)# lower threshold score for evaluation
         prc.add_img_result(
@@ -125,6 +127,8 @@ def train(model):
         progbar = tqdm(iterable = iter(training_data), total = training_data.num_samples, postfix = stats.progress_bar_postfix())
         for sample in progbar:
             
+            if sample is None:
+                continue
             x, _, gt_rpn_minibatch = _convert_sample_to_model_input(sample = sample, mode = "train")
             losses = model.train_on_batch(x = x, y = gt_rpn_minibatch, return_dict = True)
             stats.during_training_step(losses = losses)
