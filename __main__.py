@@ -3,7 +3,7 @@ import numpy as np
 import os
 import random
 from tqdm import tqdm
-from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.optimizers import SGD, Adam
 import tensorflow as tf
 
 import warnings
@@ -221,7 +221,8 @@ if __name__ == '__main__':
               (1, None, 4)            # gt_box_corners_map: (1, num_gt_boxes, 4)
         ]
     )
-    optimizer = SGD(learning_rate = options.learning_rate, momentum = 0.9)
+    #optimizer = SGD(learning_rate = options.learning_rate, momentum = 0.9)
+    optimizer = Adam(learning_rate = options.learning_rate, beta_1 = 0.9, beta_2 = 0.999)
     model.compile(optimizer = optimizer)
     
     if options.load_from:
