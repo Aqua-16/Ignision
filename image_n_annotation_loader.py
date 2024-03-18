@@ -4,6 +4,7 @@ import numpy as np
 import os
 from pathlib import Path
 import random
+random.seed(42)
 import xml.etree.ElementTree as ET
 from typing import List
 from typing import Tuple
