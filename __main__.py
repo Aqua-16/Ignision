@@ -94,7 +94,7 @@ def evaluate(model,eval_data=None,num_samples = None, plot=False,print_AP=False)
             gt_boxes = sample.gt_boxes
         )
         i+=1
-        if i>=num_samples:
+        if i>num_samples:
             break
     if print_AP:
         prc.print_avg_precisions(class_index_to_name=dataset.Dataset.class_index_to_name)
