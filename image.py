@@ -39,7 +39,8 @@ def show_detections(out_path,image,scored_boxes_class_idx,class_idx_name):
             cls_name = class_idx_name[cls_idx]
 
             cv2.rectangle(image_,(scored_box[1],scored_box[0]),(scored_box[3],scored_box[2]),color, thickness = 2)
-            cv2.putText(image_,cls_name,(scored_box[1],scored_box[0]),cv2.FONT_HERSHEY_SIMPLEX,1.5,color,thickness = 2)
+            cls_name = cls_name.capitalize()
+            cv2.putText(image_,cls_name,(scored_box[1],scored_box[0]),cv2.FONT_HERSHEY_SIMPLEX,1.5,color,thickness = 4)
 
     cv2.imshow("Detections", image_)
     cv2.waitKey(0)
