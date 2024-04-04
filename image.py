@@ -32,13 +32,13 @@ def load_image(path,flip=None):
 def show_detections(out_path,image,scored_boxes_class_idx,class_idx_name):
     image_ = np.array(image)
     image_ = cv2.cvtColor(image_, cv2.COLOR_RGB2BGR)
-    color = (32,32,32)
+    color = (0,0,0)
     for cls_idx,scored_boxes in scored_boxes_class_idx.items():
         for i in range(scored_boxes.shape[0]):
             scored_box = scored_boxes[i][0:4].astype(int)
             cls_name = class_idx_name[cls_idx]
 
-            cv2.rectangle(image_,(scored_box[0],scored_box[1]),(scored_box[2],scored_box[3]),color, thickness = 2)
+            cv2.rectangle(image_,(scored_box[1],scored_box[0]),(scored_box[3],scored_box[2]),color, thickness = 2)
             cv2.putText(image_,cls_name,(scored_box[1],scored_box[0]),cv2.FONT_HERSHEY_SIMPLEX,1.5,color,thickness = 2)
 
     cv2.imshow("Detections", image_)
