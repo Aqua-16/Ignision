@@ -8,8 +8,8 @@ The images and XML annotations are sourced from the  [Fire Data Annotations Imag
 
 <pre>
 <code class="language-bash">
-python -m venv env_name <span style="color: green">#Create a virtual env named env_name</span>
-env_name\Scripts\activate <span style="color: green">#For Windows: Activate the virtual env</span>
+python -m venv env_name <span style="color: green">                 #Create a virtual env named env_name</span>
+env_name\Scripts\activate <span style="color: green">               #For Windows: Activate the virtual env</span>
 pip install -r Ignision/requirements.txt <span style="color: green">#Download the required libraries</span>
 </code>
 </pre>
@@ -53,3 +53,14 @@ python -m Ignision --predict-to-file="file_path" --load-from="Ignision\weights.h
 <br>
 <img src="results/4.jpg" width="350"/>&nbsp;&nbsp;&nbsp;&nbsp;
 <img src="results/4 pred.jpg" width="350"/> 
+
+## References
+[Faster R-CNN: Towards Real-Time Object
+Detection with Region Proposal Networks](https://arxiv.org/abs/1506.01497)
+## Contributors
+[Sahaj Srivastava](https://github.com/sahaj-96) <br>
+[Sahil Dutta](https://github.com/Aqua-16)
+
+Thanks for viewing our project!
+
+
